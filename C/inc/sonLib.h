@@ -22,7 +22,6 @@
 #include "sonLibList.h"
 #include "sonLibCommon.h"
 #include "sonLibTuples.h"
-#include "sonLibAlign.h"
 #include "sonLibExcept.h"
 #include "sonLibRandom.h"
 #include "sonLibKVDatabase.h"
