@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from setuptools import setup
+from setuptools import setup, find_packages
 import subprocess
 import distutils.command.build_py
 
@@ -19,18 +19,12 @@ class BuildWithMake(distutils.command.build_py.build_py):
 
 
 setup(name="sonLib",
-    version="1.0",
-    description="Small general purpose library for C and Python with focus on "
-    "bioinformatics.",
-    author="Benedict Paten",
-    author_email="benedict@soe.ucsc.edu",
-    url="https://github.com/benedictpaten/sonLib",
-    packages=["sonLib"],
-    # Hook the build command to also build with make
-    cmdclass={"build_py": BuildWithMake},
-    # Install all the executable scripts and binaries somewhere on the PATH
-    scripts=["bin/sonLibTests", "bin/sonLib_daemonize.py", 
-    "bin/sonLib_kvDatabaseTest", "bin/sonLib_cigarTest", 
-    "bin/sonLib_fastaCTest"])
+      version="1.0",
+      description="Small general purpose library for C and Python with focus on "
+      "bioinformatics.",
+      author="Benedict Paten",
+      author_email="benedict@soe.ucsc.edu",
+      package_dir = {'': 'src'},
+      packages=find_packages(where='src'))
 
     
