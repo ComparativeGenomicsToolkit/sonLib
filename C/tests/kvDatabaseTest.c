@@ -427,9 +427,11 @@ static void testBulkRemoveRecords(CuTest *testCase) {
  * Retrieves really long records from the database.
  */
 static void bigRecordRetrieval(CuTest *testCase) {
+    int64_t maxRecordSize = 1000000;
+    stKVDatabaseConf_setMaxKTRecordSize(conf, maxRecordSize);
     setup();
     for (int64_t i = 0; i < 10; i++) {
-        int64_t size = st_randomInt(5000000, 10000000);
+        int64_t size = st_randomInt(maxRecordSize, 10*maxRecordSize);
         char *randomRecord = st_malloc(size * sizeof(char));
         for (int64_t j = 0; j < size; j++) {
             randomRecord[j] = (char) st_randomInt(0, 100);

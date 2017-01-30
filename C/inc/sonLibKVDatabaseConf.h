@@ -86,6 +86,10 @@ int stKVDatabaseConf_getTimeout(stKVDatabaseConf *conf);
 /* get the maximum size in bytes of a kyoto tycoon record */
 int64_t stKVDatabaseConf_getMaxKTRecordSize(stKVDatabaseConf *conf);
 
+/* set the maximum size in bytes of a kyoto tycoon record */
+void stKVDatabaseConf_setMaxKTRecordSize(stKVDatabaseConf *conf,
+                                         int64_t maxRecordSize);
+
 /* get the maximum size in bytes of a kyoto tycoon bulk set */
 int64_t stKVDatabaseConf_getMaxKTBulkSetSize(stKVDatabaseConf *conf);
 

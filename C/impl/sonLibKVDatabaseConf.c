@@ -304,6 +304,11 @@ int64_t stKVDatabaseConf_getMaxKTRecordSize(stKVDatabaseConf *conf) {
     return conf->maxKTRecordSize;
 }
 
+void stKVDatabaseConf_setMaxKTRecordSize(stKVDatabaseConf *conf,
+                                         int64_t maxRecordSize) {
+    conf->maxKTRecordSize = maxRecordSize;
+}
+
 int64_t stKVDatabaseConf_getMaxKTBulkSetSize(stKVDatabaseConf *conf) {
     return conf->maxKTBulkSetSize;
 }
