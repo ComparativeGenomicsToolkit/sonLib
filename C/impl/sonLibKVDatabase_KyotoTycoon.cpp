@@ -195,7 +195,6 @@ static void insertRecord(stKVDatabase *database, int64_t key, const void *value,
     if (sizeOfRecord > maxRecordSize)
     {
         int64_t numSplitRecords = sizeOfRecord / maxRecordSize + 1;
-        printf("attempting to create %" PRIi64 " records\n", numSplitRecords);
         char splitKey[SPLIT_KEY_SIZE];
         for (int64_t i = 0; i < numSplitRecords; i++) {
             buildSplitKey(key, i, splitKey);
@@ -393,8 +392,6 @@ static void *getRecord2(stKVDatabase *database, int64_t key, int64_t *recordSize
     if (recordIsSplit(database, key) == true)
     {
         int64_t numSplits = getNumberOfSplitRecords(database, key);
-        printf("attempting to read %" PRIi64 " split records\n",
-               numSplits);
         record = (char *) st_malloc(maxRecordSize * numSplits);
         *recordSize = 0;
         char splitKey[SPLIT_KEY_SIZE];
@@ -403,8 +400,6 @@ static void *getRecord2(stKVDatabase *database, int64_t key, int64_t *recordSize
             size_t subSize;
             char *subRecord = rdb->get(splitKey, sizeof(splitKey), &subSize, NULL);
             *recordSize += subSize;
-            printf("read %zu bytes from record %" PRIi64 "\n",
-                   subSize, i);
             memcpy(record + i * maxRecordSize, subRecord, subSize);
             delete subRecord;
         }
