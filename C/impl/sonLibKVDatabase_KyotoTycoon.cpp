@@ -337,7 +337,7 @@ static void bulkSetRecords(stKVDatabase *database, stList *records) {
         // record too big for kt, we put in the secondary
         if (request->size > maxRecordSize) {
             removeRecordFromTycoonIfPresent(database, request->key);
-            insertRecord(database, request->key, request->value, request->size);
+            setRecord(database, request->key, request->value, request->size);
         }
         else
         {
