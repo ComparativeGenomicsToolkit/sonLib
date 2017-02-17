@@ -31,7 +31,7 @@ ifndef CXX
     cpp = g++ 
   endif
 else
-  cpp = ${CXX} -std=gnu++11
+  cpp = ${CXX} -std=gnu++98
 endif
 
 # -Wno-unused-result
