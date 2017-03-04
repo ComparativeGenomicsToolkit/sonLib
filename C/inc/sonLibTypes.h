@@ -34,7 +34,6 @@ extern "C" {
 typedef struct _stTree stTree;
 typedef struct _stHash stHash;
 typedef struct _stSet stSet;
-typedef struct hashtable_itr stHashIterator;
 typedef struct _stSetIterator stSetIterator;
 typedef struct _stSortedSet stSortedSet;
 typedef struct _stSortedSetIterator stSortedSetIterator;

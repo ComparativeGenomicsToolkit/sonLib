@@ -13,11 +13,23 @@
 #include "sonLibGlobalsInternal.h"
 #include "hashTableC.h"
 #include "hashTableC_itr.h"
+#include "coucal.h"
 
 struct _stHash {
-    struct hashtable *hash;
+    coucal hash;
     bool destructKeys, destructValues;
 };
+
+struct _stHashIterator {
+    struct_coucal_enum e;
+};
+
+static coucal_hashkeys hash_uint64(void *arg, const void *data) {
+    //printf("Hashing key %p: %" PRIu64 "\n", data, *((uint64_t *) data));
+    coucal_hashkeys ret = coucal_hash_data(&data, sizeof(void *));
+    printf("Got hash: %" PRIu32 " %" PRIu32 "\n", ret.hash1, ret.hash2);
+    return ret;
+}
 
 uint64_t stHash_pointer(const void *k) {
     /*if (sizeof(const void *) > 4) {
@@ -33,7 +45,8 @@ uint64_t stHash_pointer(const void *k) {
     return (uint64_t) (size_t) k; //Just use the low order bits
 }
 
-static int stHash_equalKey(const void *key1, const void *key2) {
+static int stHash_equalKey(void *arg, const void *key1, const void *key2) {
+    printf("%p == %p?\n", key1, key2);
     return key1 == key2;
 }
 
@@ -47,60 +60,54 @@ stHash *stHash_construct2(void(*destructKeys)(void *), void(*destructValues)(voi
 
 stHash *stHash_construct3(uint64_t(*hashKey)(const void *), int(*hashEqualsKey)(const void *, const void *), void(*destructKeys)(void *), void(*destructValues)(void *)) {
     stHash *hash = st_malloc(sizeof(stHash));
-    hash->hash = create_hashtable(0, hashKey, hashEqualsKey, destructKeys, destructValues);
+    hash->hash = coucal_new(0);
+    coucal_value_set_key_handler(hash->hash, NULL, NULL, hash_uint64, stHash_equalKey, NULL);
     hash->destructKeys = destructKeys != NULL;
     hash->destructValues = destructValues != NULL;
     return hash;
 }
 
 void stHash_destruct(stHash *hash) {
-    hashtable_destroy(hash->hash, hash->destructValues, hash->destructKeys);
+    coucal_delete(&hash->hash);
     free(hash);
 }
 
 void stHash_insert(stHash *hash, void *key, void *value) {
-    if (stHash_search(hash, key) != NULL) { //This will ensure we don't end up with duplicate keys..
-        stHash_remove(hash, key);
-    }
-    hashtable_insert(hash->hash, key, value);
+    coucal_write_pvoid(hash->hash, key, value);
 }
 
 void *stHash_search(stHash *hash, void *key) {
-    return hashtable_search(hash->hash, key);
+    return coucal_get_pvoid(hash->hash, key);
 }
 
 void *stHash_remove(stHash *hash, void *key) {
-    return hashtable_remove(hash->hash, key, 0);
+    return coucal_remove(hash->hash, key);
 }
 
 void *stHash_removeAndFreeKey(stHash *hash, void *key) {
-    return hashtable_remove(hash->hash, key, 1);
+    return coucal_remove(hash->hash, key);
 }
 
 int64_t stHash_size(stHash *hash) {
-    return hashtable_count(hash->hash);
+    return (int64_t) coucal_nitems(hash->hash);
 }
 
 stHashIterator *stHash_getIterator(stHash *hash) {
-    return hashtable_iterator(hash->hash);
+    stHashIterator *ret = malloc(sizeof(stHashIterator));
+    ret->e = coucal_enum_new(hash->hash);
+    return ret;
 }
 
 void *stHash_getNext(stHashIterator *iterator) {
-    if (iterator->e != NULL) {
-        void *o = hashtable_iterator_key(iterator);
-        hashtable_iterator_advance(iterator);
-        return o;
+    coucal_item *item = coucal_enum_next(&iterator->e);
+    if (item == NULL) {
+        return NULL;
     }
-    return NULL;
+    return item->name;
 }
 
 stHashIterator *stHash_copyIterator(stHashIterator *iterator) {
-    stHashIterator *iterator2 = st_malloc(sizeof(stHashIterator));
-    iterator2->h = iterator->h;
-    iterator2->e = iterator->e;
-    iterator2->parent = iterator->parent;
-    iterator2->index = iterator->index;
-    return iterator2;
+    return NULL;
 }
 
 void stHash_destructIterator(stHashIterator *iterator) {
@@ -108,25 +115,27 @@ void stHash_destructIterator(stHashIterator *iterator) {
 }
 
 stList *stHash_getKeys(stHash *hash) {
-    stList *list = stList_construct();
-    stHashIterator *iterator = stHash_getIterator(hash);
-    void *item;
-    while ((item = stHash_getNext(iterator)) != NULL) {
-        stList_append(list, item);
-    }
-    stHash_destructIterator(iterator);
-    return list;
+    /* stList *list = stList_construct(); */
+    /* stHashIterator *iterator = stHash_getIterator(hash); */
+    /* void *item; */
+    /* while ((item = stHash_getNext(iterator)) != NULL) { */
+    /*     stList_append(list, item); */
+    /* } */
+    /* stHash_destructIterator(iterator); */
+    /* return list; */
+    return NULL;
 }
 
 stList *stHash_getValues(stHash *hash) {
-    stList *list = stList_construct();
-    stHashIterator *iterator = stHash_getIterator(hash);
-    void *item;
-    while ((item = stHash_getNext(iterator)) != NULL) {
-        stList_append(list, stHash_search(hash, item));
-    }
-    stHash_destructIterator(iterator);
-    return list;
+    /* stList *list = stList_construct(); */
+    /* stHashIterator *iterator = stHash_getIterator(hash); */
+    /* void *item; */
+    /* while ((item = stHash_getNext(iterator)) != NULL) { */
+    /*     stList_append(list, stHash_search(hash, item)); */
+    /* } */
+    /* stHash_destructIterator(iterator); */
+    /* return list; */
+    return NULL;
 }
 
 /*
@@ -173,16 +182,16 @@ stHash *stHash_invert(stHash *hash, uint64_t(*hashKey)(const void *), int(*equal
 }
 // interface to underlying functions
 uint64_t (*stHash_getHashFunction(stHash *hash))(const void *) {
-    return hash->hash->hashfn;
+    return NULL;
 }
 int (*stHash_getEqualityFunction(stHash *hash))(const void *, const void *) {
-    return hash->hash->eqfn;
+    return NULL;
 }
 void (*stHash_getKeyDestructorFunction(stHash *hash))(void *) {
-    return hash->hash->keyFree;
+    return NULL;
 }
 void (*stHash_getValueDestructorFunction(stHash *hash))(void *) {
-    return hash->hash->valueFree;
+    return NULL;
 }
 
 static int unsigned_cmp(const unsigned *x, const unsigned *y) {
@@ -196,32 +205,5 @@ static int unsigned_cmp(const unsigned *x, const unsigned *y) {
 }
 
 void stHash_printDiagnostics(stHash *hash) {
-    struct hashtable *h = hash->hash;
-    unsigned *bucketLoad = st_malloc(h->tablelength * sizeof(unsigned));
-    unsigned *occupiedBucketLoad = st_malloc(h->entrycount * sizeof(unsigned));
-    size_t occupiedBuckets = 0;
-    for (size_t i = 0; i < h->tablelength; i++) {
-        unsigned load = 0;
-        struct entry *e;
-        if ((e = h->table[i]) != NULL) {
-            while (e) {
-                load++;
-                e = e->next;
-            }
-            occupiedBucketLoad[occupiedBuckets++] = load;
-        }
-        bucketLoad[i] = load;
-    }
-    printf("Load: %" PRIi64 " / %" PRIi64 " (%lf%%)\n", h->entrycount, h->tablelength, ((double)h->entrycount)/h->tablelength * 100);
-    printf("# occupied buckets: %zu\n", occupiedBuckets);
-    qsort(bucketLoad, h->tablelength, sizeof(unsigned), (int (*)(const void *, const void *)) unsigned_cmp);
-    qsort(occupiedBucketLoad, occupiedBuckets, sizeof(unsigned), (int (*)(const void *, const void *)) unsigned_cmp);
-    printf("min load: %u, median load: %u, max load: %u\n", bucketLoad[0], bucketLoad[(h->tablelength - 1) / 2],
-           bucketLoad[h->tablelength - 1]);
-    printf("min occupied load: %u, avg occupied load: %lf, median occupied load: %u, max occupied load: %u\n",
-           occupiedBucketLoad[0], ((double)h->entrycount)/occupiedBuckets,
-           occupiedBucketLoad[(occupiedBuckets - 1) / 2],
-           occupiedBucketLoad[occupiedBuckets - 1]);
-    free(occupiedBucketLoad);
-    free(bucketLoad);
+    return;
 }

@@ -20,6 +20,8 @@
 extern "C" {
 #endif
 
+typedef struct _stHashIterator stHashIterator;
+
 // FIXME: passing key as non-const is causing unnecessary casts
 
 /*
