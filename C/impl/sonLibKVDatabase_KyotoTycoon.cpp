@@ -107,7 +107,7 @@ static bool recordInTycoon(stKVDatabase *database, int64_t key) {
     if ((cA = rdb->get((char *)&key, (size_t)sizeof(key), &sp, NULL)) == NULL) {
         return false;
     } else {
-        delete cA;
+        delete[] cA;
         return true;
     }
 }
@@ -128,7 +128,7 @@ static bool recordIsSplit(stKVDatabase *database, int64_t key_base)
     if ((cA = rdb->get((char *)&key, (size_t)sizeof(key), &sp, NULL)) == NULL) {
         return false;
     } else {
-        delete cA;
+        delete[] cA;
         return true;
     }
     assert(recordInTycoon(database, key_base) == false);
@@ -159,7 +159,7 @@ static int64_t getNumberOfSplitRecords(stKVDatabase *database, int64_t key) {
         if ((cA = rdb->get(splitKey, sizeof(splitKey), &sp, NULL)) == NULL) {
             foundEnd = true;
         } else {
-            delete cA;
+            delete[] cA;
             numSplits++;
         }
     }
@@ -414,7 +414,7 @@ static void *getRecord2(stKVDatabase *database, int64_t key, int64_t *recordSize
             char *subRecord = rdb->get(splitKey, sizeof(splitKey), &subSize, NULL);
             *recordSize += subSize;
             memcpy(record + i * maxRecordSize, subRecord, subSize);
-            delete subRecord;
+            delete[] subRecord;
         }
     }
     else if (recordInTycoon(database, key) == true)
@@ -424,9 +424,9 @@ static void *getRecord2(stKVDatabase *database, int64_t key, int64_t *recordSize
         char* newRecord = rdb->get((char *)&key, (size_t)sizeof(int64_t), &i, NULL);
         *recordSize = (int64_t)i;
         record = (char*)memcpy(st_malloc(*recordSize), newRecord, *recordSize);
-        delete newRecord;
+        delete[] newRecord;
     }
-        
+
     return record;
 }
 
@@ -443,7 +443,7 @@ static int64_t getInt64(stKVDatabase *database, int64_t key) {
     size_t sp;
     char *newRecord = rdb->get((char *)&key, sizeof(int64_t), &sp, NULL);
     char* record = (char*)memcpy(st_malloc( sizeof(int64_t)), newRecord,  sizeof(int64_t));
-    delete newRecord;
+    delete[] newRecord;
 
     // convert from KC native big-endian back to little-endian Intel...
     return kyotocabinet::ntoh64(*((int64_t*)record));
