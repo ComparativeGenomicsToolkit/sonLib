@@ -10,7 +10,7 @@ libTests = tests/sonLib*.c tests/st*
 quickTreeObjects = ../externalTools/quicktree_1.1/obj/buildtree.o ../externalTools/quicktree_1.1/obj/cluster.o ../externalTools/quicktree_1.1/obj/distancemat.o ../externalTools/quicktree_1.1/obj/options.o ../externalTools/quicktree_1.1/obj/sequence.o ../externalTools/quicktree_1.1/obj/tree.o ../externalTools/quicktree_1.1/obj/util.o
 quickTreeLibPath = ../externalTools/quicktree_1.1/include/
 
-testProgs = ${binPath}/sonLibTests ${binPath}/sonLib_kvDatabaseTest ${binPath}/sonLib_cigarTest ${binPath}/sonLib_fastaCTest
+testProgs = ${binPath}/sonLibTests ${binPath}/sonLib_kvDatabaseTest ${binPath}/sonLib_cigarTest ${binPath}/sonLib_fastaCTest ${binPath}/hashBenchmark
 
 cflags += ${tokyoCabinetIncl} ${kyotoTycoonIncl} ${tokyoTyrantIncl} ${mysqlIncl} ${pgsqlIncl} -I${quickTreeLibPath}
 cppflags += ${kyotoTycoonIncl}
@@ -48,6 +48,10 @@ ${binPath}/kt_connect_test : tests/kt_connect_test.cpp ${libTests} ${libInternal
 ${libPath}/%.h: inc/%.h
 	@mkdir -p $(dir $@)
 	cp $< $@.tmp
+	mv $@.tmp $@
+
+${binPath}/hashBenchmark: tests/hashBenchmark.c ${libPath}/sonLib.a
+	${cxx} ${cflags} -I inc -I ${libPath} -o $@.tmp tests/hashBenchmark.c ${libPath}/sonLib.a -lm
 	mv $@.tmp $@
 
 ${libPath}/sonLib.a : ${libSources} ${cppSources} $(foreach l, ${libHeaders}, ${libPath}/$(notdir $l)) ${libInternalHeaders}
