@@ -11,9 +11,12 @@
  *      Author: benedictpaten
  */
 
+#define _POSIX_C_SOURCE 1 // needed for fileno()
+
 #include "sonLibGlobalsInternal.h"
 #include <errno.h>
 #include <features.h>
+#include <stdio.h>
 #ifdef __GNU_LIBRARY__
 #define USE_BACKTRACE 1
 #define MAX_BACKTRACE_DEPTH 256
