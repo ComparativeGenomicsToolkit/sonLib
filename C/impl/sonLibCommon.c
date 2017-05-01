@@ -15,13 +15,17 @@
 
 #include "sonLibGlobalsInternal.h"
 #include <errno.h>
-#include <features.h>
+// We need features.h to check if __GNU_LIBRARY__ is
+// defined. Unfortunately, features.h is only available in glibc. The
+// common workaround is to include limits.h, which includes features.h
+// in glibc.
+#include <limits.h>
 #include <stdio.h>
 #ifdef __GNU_LIBRARY__
 #define USE_BACKTRACE 1
 #define MAX_BACKTRACE_DEPTH 256
 #include <execinfo.h>
-#endif // __GNU_LIBRARY__
+#endif // __GLIBC__
 
 static enum stLogLevel LOG_LEVEL = critical;
 
