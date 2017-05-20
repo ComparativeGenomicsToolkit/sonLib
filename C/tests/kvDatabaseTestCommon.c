@@ -38,6 +38,8 @@ static stKVDatabaseType parseDbType(const char *dbTypeStr) {
         return stKVDatabaseTypeKyotoTycoon;
     } else if (stString_eqcase(dbTypeStr, "MySql")) {
         return stKVDatabaseTypeMySql;
+    } else if (stString_eqcase(dbTypeStr, "Redis")) {
+        return stKVDatabaseTypeRedis;
     } else {
         fprintf(stderr, "Error: invalid value for --type: %s\n", dbTypeStr);
         exit(1);
@@ -142,6 +144,9 @@ stKVDatabaseConf *kvDatabaseTestParseOptions(int argc, char *const *argv, const 
     } else if (optType == stKVDatabaseTypeMySql) {
         conf = stKVDatabaseConf_constructMySql(optHost, 0, optUser, optPass, optDb, "cactusDbTest");
         fprintf(stderr, "running MySQL sonLibKVDatabase tests\n");
+    } else if (optType == stKVDatabaseTypeRedis) {
+        conf = stKVDatabaseConf_constructRedis(optHost, optPort);
+        fprintf(stderr, "running Redis sonLibKVDatabase tests\n");
     }
     return conf;
 }

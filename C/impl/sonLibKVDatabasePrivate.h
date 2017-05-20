@@ -79,5 +79,6 @@ void stKVDatabase_initialise_bigRecordFile(stKVDatabase *database, stKVDatabaseC
 }
 #endif
 
+void stKVDatabase_initialise_Redis(stKVDatabase *database, stKVDatabaseConf *conf, bool create);
 
 #endif /* SONLIBKVDATABASEPRIVATE_H_ */

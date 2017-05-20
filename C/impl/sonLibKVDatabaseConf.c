@@ -43,9 +43,9 @@ stKVDatabaseConf *stKVDatabaseConf_constructTokyoCabinet(const char *databaseDir
 }
 
 stKVDatabaseConf *stKVDatabaseConf_constructKyotoTycoon(const char *host, unsigned port, int timeout,
-														int64_t maxRecordSize, int64_t maxBulkSetSize,
-														int64_t maxBulkSetNumRecords,
-														const char *databaseDir, const char* databaseName) {
+                                                        int64_t maxRecordSize, int64_t maxBulkSetSize,
+                                                        int64_t maxBulkSetNumRecords,
+                                                        const char *databaseDir, const char* databaseName) {
     stKVDatabaseConf *conf = stSafeCCalloc(sizeof(stKVDatabaseConf));
     conf->type = stKVDatabaseTypeKyotoTycoon;
     conf->databaseDir = stString_copy(databaseDir);
@@ -56,6 +56,14 @@ stKVDatabaseConf *stKVDatabaseConf_constructKyotoTycoon(const char *host, unsign
     conf->maxKTBulkSetSize = maxBulkSetSize;
     conf->maxKTBulkSetNumRecords = maxBulkSetNumRecords;
     conf->databaseName = stString_copy(databaseName);
+    return conf;
+}
+
+stKVDatabaseConf *stKVDatabaseConf_constructRedis(const char *host, unsigned port) {
+    stKVDatabaseConf *conf = stSafeCCalloc(sizeof(stKVDatabaseConf));
+    conf->type = stKVDatabaseTypeRedis;
+    conf->host = stString_copy(host);
+    conf->port = port;
     return conf;
 }
 

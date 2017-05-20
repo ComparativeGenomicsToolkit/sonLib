@@ -16,6 +16,7 @@ typedef enum {
     stKVDatabaseTypeTokyoCabinet,
     stKVDatabaseTypeKyotoTycoon,
     stKVDatabaseTypeMySql,
+    stKVDatabaseTypeRedis,
 } stKVDatabaseType;
 
 /* 
@@ -29,9 +30,15 @@ stKVDatabaseConf *stKVDatabaseConf_constructTokyoCabinet(const char *databaseDir
  * database remote object.
  */
 stKVDatabaseConf *stKVDatabaseConf_constructKyotoTycoon(const char *host, unsigned port, int timeout,
-														int64_t maxRecordSize, int64_t maxBulkSetSize,
-														int64_t maxBulkSetNumRecords,
-														const char *databaseDir, const char* databaseName);
+                                                        int64_t maxRecordSize, int64_t maxBulkSetSize,
+                                                        int64_t maxBulkSetNumRecords,
+                                                        const char *databaseDir, const char* databaseName);
+
+/* 
+ * Construct a new database configuration object for a Kyoto Tycoon
+ * database remote object.
+ */
+stKVDatabaseConf *stKVDatabaseConf_constructRedis(const char *host, unsigned port);
 
 /* 
  * Construct a new database configuration object for a MySql database.

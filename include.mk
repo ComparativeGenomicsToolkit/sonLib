@@ -119,5 +119,11 @@ else ifneq ($(wildcard /usr/include/ktcommon.h),)
 endif
 endif
 
-dblibs = ${tokyoCabinetLib} ${kyotoTycoonLib} -lz -lm
+# location of hiredis
+ifndef hiRedisLib
+  hiRedisLib = $(shell pkg-config --libs hiredis)
+  hiRedisIncl = $(shell pkg-config --cflags hiredis) -DHAVE_REDIS=1
+endif
+
+dblibs = ${tokyoCabinetLib} ${kyotoTycoonLib} ${hiRedisLib} -lz -lm
 
