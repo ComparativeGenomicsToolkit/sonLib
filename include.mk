@@ -121,8 +121,17 @@ endif
 
 # location of hiredis
 ifndef hiRedisLib
-  hiRedisLib = $(shell pkg-config --libs hiredis)
-  hiRedisIncl = $(shell pkg-config --cflags hiredis) -DHAVE_REDIS=1
+  HAVE_REDIS = $(shell pkg-config --exists hiredis; echo $$?)
+  ifeq (${HAVE_REDIS},0)
+    hiRedisLib = $(shell pkg-config --libs hiredis)
+    incs = $(shell pkg-config --cflags hiredis)
+    ifeq ($(findstring -I,${incs}),)
+      # Broken 14.04 package
+      hiRedisIncl = ${incs} -DHAVE_REDIS=1 -I/usr/include/hiredis
+    else
+      hiRedisIncl = ${incs} -DHAVE_REDIS=1
+    endif
+  endif
 endif
 
 dblibs = ${tokyoCabinetLib} ${kyotoTycoonLib} ${hiRedisLib} -lz -lm
