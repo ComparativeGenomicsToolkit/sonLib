@@ -134,12 +134,19 @@ static void *getRecord2(stKVDatabase *database, int64_t key, int64_t *sizeOfReco
 }
 
 static int64_t getInt64(stKVDatabase *database, int64_t key) {
-    void *record = getRecord2(database, key, NULL);
+    int64_t len;
+    void *record = getRecord2(database, key, &len);
+    // Make a null-terminated string
+    char *str = malloc(len + 1);
+    memcpy(str, record, len);
+    free(record);
+    str[len] = '\0';
     int64_t ret;
-    if (sscanf(record, "%" PRIi64, &ret) == 0) {
-        free(record);
+    if (sscanf(str, "%" PRIi64, &ret) == 0) {
+        free(str);
         stThrowNew(ST_KV_DATABASE_EXCEPTION_ID, "Key %" PRIi64 " does not have an integer value", key);
     }
+    free(str);
     return ret;
 }
 
@@ -166,7 +173,9 @@ static void *getPartialRecord(stKVDatabase *database, int64_t key, int64_t zeroB
                                        zeroBasedByteOffset + sizeInBytes - 1);
     assert(reply->type == REDIS_REPLY_STRING);
     if (reply->len != sizeInBytes) {
-        stThrowNew(ST_KV_DATABASE_EXCEPTION_ID, "partial read of key %lld, expected %lld bytes got %lld bytes", key, sizeInBytes, reply->len);
+        int64_t len = reply->len;
+        freeReplyObject(reply);
+        stThrowNew(ST_KV_DATABASE_EXCEPTION_ID, "partial read of key %lld, expected %lld bytes got %lld bytes", key, sizeInBytes, len);
     }
     char *data = malloc(reply->len * sizeof(char));
     memcpy(data, reply->str, reply->len);
