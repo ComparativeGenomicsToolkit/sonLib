@@ -159,6 +159,7 @@ static void destructDB(stKVDatabase *database) {
         }
         delete db->rdb;
         stSet_destruct(db->splitRecords);
+        free(db->oldSplitRecords);
         free(db);
         database->dbImpl = NULL;
     }
@@ -531,7 +532,9 @@ static int64_t getInt64(stKVDatabase *database, int64_t key) {
     delete[] newRecord;
 
     // convert from KC native big-endian back to little-endian Intel...
-    return kyotocabinet::ntoh64(*((int64_t*)record));
+    int64_t ret = kyotocabinet::ntoh64(*((int64_t*)record));
+    free(record);
+    return ret;
 }
 
 /* get part of a string record */
