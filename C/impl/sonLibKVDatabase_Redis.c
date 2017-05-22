@@ -13,10 +13,6 @@ typedef struct {
 static redisReply *stRedisCommand(RedisDB *db, const char *string, ...) {
     va_list ap;
     va_start(ap, string);
-    vprintf(string, ap);
-    printf("\n");
-    va_end(ap);
-    va_start(ap, string);
     redisReply *reply = redisvCommand(db->ctxt, string, ap);
     va_end(ap);
 
