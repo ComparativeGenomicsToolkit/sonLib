@@ -28,6 +28,13 @@ extern "C" {
 stCache *stCache_construct(void);
 
 /*
+ * Create an empty cache of limited size. Overhead is not counted
+ * toward the size. The cache follows a least-recently-used eviction
+ * policy.
+ */
+stCache *stCache_construct2(size_t maxSize);
+
+/*
  * Destructs the cache.
  */
 void stCache_destruct(stCache *cache);
