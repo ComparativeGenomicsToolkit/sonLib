@@ -45,6 +45,7 @@ int main(int argc, char *argv[]) {
         cigarWrite(fileHandle, pAs->list[i], keepProbs);
     }
     fclose(fileHandle);
+    destructList(pAs);
 
     return 0;
 }

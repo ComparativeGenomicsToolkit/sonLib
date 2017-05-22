@@ -194,7 +194,9 @@ static int64_t getInt64(stKVDatabase *database, int64_t key) {
     if (record == NULL) {
         return -1;
     } else {
-        return *((int64_t*)record);
+        int64_t ret = *((int64_t*)record);
+        free(record);
+        return ret;
     }
 }
 
@@ -235,6 +237,7 @@ static void *getPartialRecord(stKVDatabase *database, int64_t key, int64_t zeroB
         stThrowNew(ST_KV_DATABASE_EXCEPTION_ID, "The record does not exist: %lld for partial retrieval", (long long)key);
     }
     if(zeroBasedByteOffset < 0 || sizeInBytes < 0 || zeroBasedByteOffset + sizeInBytes > recordSize) {
+        free(record);
         stThrowNew(ST_KV_DATABASE_EXCEPTION_ID, "Partial record retrieval to out of bounds memory, record size: %lld, requested start: %lld, requested size: %lld", (long long)recordSize, (long long)zeroBasedByteOffset, (long long)sizeInBytes);
     }
     void *partialRecord = memcpy(st_malloc(sizeInBytes), record + zeroBasedByteOffset, sizeInBytes);
