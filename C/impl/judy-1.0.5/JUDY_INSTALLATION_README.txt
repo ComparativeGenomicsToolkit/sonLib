@@ -1,0 +1,1 @@
+Judy Installation/Compilation1. ./configure2. make3. make install4. gcc пo рс рс -lJudy
