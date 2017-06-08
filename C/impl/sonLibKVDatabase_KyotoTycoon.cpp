@@ -61,12 +61,12 @@ static void insertSplitRecordIntoCache(KTDB *db, int64_t key) {
 static void fillSplitRecordCache(KTDB *db) {
     RemoteDB *rdb = db->rdb;
     size_t splitRecordsSize;
-    int64_t *splitRecords = (int64_t *) rdb->get(SPLIT_RECORDS_KEY, sizeof(SPLIT_RECORDS_KEY),
+    int64_t *splitRecords = (int64_t *) rdb->get(SPLIT_RECORDS_KEY, sizeof(SPLIT_RECORDS_KEY) - 1,
                                                  &splitRecordsSize, NULL);
     assert(splitRecordsSize % sizeof(int64_t) == 0);
     // Iterate through the split records and add them to our set.
     if (splitRecords != NULL) {
-        for (int64_t i = 0; i < splitRecordsSize / sizeof(int64_t); i++) {
+        for (size_t i = 0; i < splitRecordsSize / sizeof(int64_t); i++) {
             insertSplitRecordIntoCache(db, *(splitRecords + i));
         }
     }
@@ -88,9 +88,20 @@ static void removeSplitRecordFromCache(KTDB *db, int64_t key) {
 // them.  If this function returns true, the DB now contains the same
 // set of split records as the cache.
 static bool syncSplitRecordCache(KTDB *db) {
+    // Populate the new split records entry.
     size_t newSplitRecordsSize = stSet_size(db->splitRecords) * sizeof(int64_t);
-    int64_t *newSplitRecords = (int64_t *) st_malloc(newSplitRecordsSize * sizeof(int64_t));
-    bool success = db->rdb->cas(SPLIT_RECORDS_KEY, sizeof(SPLIT_RECORDS_KEY),
+    int64_t *newSplitRecords = (int64_t *) st_malloc(newSplitRecordsSize);
+    stSetIterator *recordIt = stSet_getIterator(db->splitRecords);
+    stIntTuple *recordTuple;
+    int64_t i = 0;
+    while ((recordTuple = (stIntTuple *) stSet_getNext(recordIt)) != NULL) {
+        int64_t record = stIntTuple_get(recordTuple, 0);
+        newSplitRecords[i] = record;
+        i++;
+    }
+
+    // Attempt a CAS with the existing record.
+    bool success = db->rdb->cas(SPLIT_RECORDS_KEY, sizeof(SPLIT_RECORDS_KEY) - 1,
                                 (char *) db->oldSplitRecords, db->oldSplitRecordsSize,
                                 (char *) newSplitRecords, newSplitRecordsSize);
     free(db->oldSplitRecords);

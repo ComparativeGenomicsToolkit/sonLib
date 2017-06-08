@@ -130,7 +130,7 @@ static void *getRecord2(stKVDatabase *database, int64_t key, int64_t *sizeOfReco
 }
 
 static int64_t getInt64(stKVDatabase *database, int64_t key) {
-    int64_t len;
+    int64_t len = 0;
     void *record = getRecord2(database, key, &len);
     // Make a null-terminated string
     char *str = malloc(len + 1);
