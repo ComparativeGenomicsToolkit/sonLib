@@ -9,7 +9,8 @@ uint8_t curVal[MAXLINE];
 
 int main(){
 
-	Pvoid_t   PJArray = (PWord_t)NULL;  // Judy array.
+    Pvoid_t   PJArray = (PWord_t)NULL;  // Judy array.
+    //void PJArray = (PWord_t)NULL; //Judy array.
     PWord_t   PValue;                   // Judy array element.
     Word_t    Bytes;                    // size of JudySL array.
 
