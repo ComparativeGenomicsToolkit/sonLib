@@ -90,7 +90,7 @@ static void removeSplitRecordFromCache(KTDB *db, int64_t key) {
 static bool syncSplitRecordCache(KTDB *db) {
     // Populate the new split records entry.
     size_t newSplitRecordsSize = stSet_size(db->splitRecords) * sizeof(int64_t);
-    int64_t *newSplitRecords = (int64_t *) st_malloc(newSplitRecordsSize);
+    int64_t *newSplitRecords = new int64_t[stSet_size(db->splitRecords)];
     stSetIterator *recordIt = stSet_getIterator(db->splitRecords);
     stIntTuple *recordTuple;
     int64_t i = 0;
@@ -99,12 +99,13 @@ static bool syncSplitRecordCache(KTDB *db) {
         newSplitRecords[i] = record;
         i++;
     }
+    stSet_destructIterator(recordIt);
 
     // Attempt a CAS with the existing record.
     bool success = db->rdb->cas(SPLIT_RECORDS_KEY, sizeof(SPLIT_RECORDS_KEY) - 1,
                                 (char *) db->oldSplitRecords, db->oldSplitRecordsSize,
                                 (char *) newSplitRecords, newSplitRecordsSize);
-    free(db->oldSplitRecords);
+    delete[] db->oldSplitRecords;
     if (success) {
         // Synced successfully
         db->oldSplitRecords = newSplitRecords;
@@ -170,7 +171,7 @@ static void destructDB(stKVDatabase *database) {
         }
         delete db->rdb;
         stSet_destruct(db->splitRecords);
-        free(db->oldSplitRecords);
+        delete[] db->oldSplitRecords;
         free(db);
         database->dbImpl = NULL;
     }
