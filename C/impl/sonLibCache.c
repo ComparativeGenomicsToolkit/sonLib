@@ -342,13 +342,13 @@ void stCache_setRecord(stCache *cache, int64_t key,
                                                       size);
     stCacheRecord *record2 = cacheRecord_construct(cache, key, value, start,
                                                    size, 1);
+    stCacheRecord *record3 = getGreaterThanOrEqualRecord(cache, key,
+                                                         start, size);
     assert(record2 != NULL);
     stSortedSet_insert(cache->cache, record2);
     if (record1 != NULL && recordsAdjacent(record1, record2)) {
         record2 = mergeRecords(cache, record1, record2);
     }
-    stCacheRecord *record3 = getGreaterThanOrEqualRecord(cache, key,
-                                                         start, size);
     if (record3 != NULL && recordsAdjacent(record2, record3)) {
         record2 = mergeRecords(cache, record2, record3);
     }

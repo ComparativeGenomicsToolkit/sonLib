@@ -109,25 +109,25 @@ static void readAndUpdateRecords(CuTest *testCase) {
     stCache_setRecord(cache, INT64_MIN, 0, 6, "earth");
 
     char *s = stCache_getRecord(cache, 1, 0, INT64_MAX, &recordSize);
-    CuAssertStrEquals(testCase, "world", s); //Get the second word
+    CuAssertStrEquals(testCase, "world", s);
     free(s);
     CuAssertTrue(testCase, recordSize == 6);
     CuAssertTrue(testCase, stCache_containsRecord(cache, 1, 0, INT64_MAX));
 
     s = stCache_getRecord(cache, INT64_MAX-1, 0, INT64_MAX, &recordSize);
-    CuAssertStrEquals(testCase, "goodbye", s); //Get the second word
+    CuAssertStrEquals(testCase, "goodbye", s);
     free(s);
     CuAssertTrue(testCase, recordSize == 8);
     CuAssertTrue(testCase, stCache_containsRecord(cache, INT64_MAX-1, 0, INT64_MAX));
 
     s = stCache_getRecord(cache, 3, 0, INT64_MAX, &recordSize);
-    CuAssertStrEquals(testCase, "cruel", s); //Get the second word
+    CuAssertStrEquals(testCase, "cruel", s);
     free(s);
     CuAssertTrue(testCase, recordSize == 6);
     CuAssertTrue(testCase, stCache_containsRecord(cache, 3, 0, INT64_MAX));
 
     s = stCache_getRecord(cache, INT64_MIN, 0, INT64_MAX, &recordSize);
-    CuAssertStrEquals(testCase, "earth", s); //Get the second word
+    CuAssertStrEquals(testCase, "earth", s);
     free(s);
     CuAssertTrue(testCase, recordSize == 6);
     CuAssertTrue(testCase, stCache_containsRecord(cache, INT64_MIN, 0, INT64_MAX));
@@ -189,6 +189,40 @@ static void limitedSizeCache(CuTest *testCase) {
     CuAssertTrue(testCase, !stCache_containsRecord(cache, 5, 0, 4));
     CuAssertTrue(testCase, stCache_containsRecord(cache, 6, 0, 88));
 
+    teardown();
+}
+
+// Test the mergeRecords functionality thoroughly (including overlap
+// cases). This is also somewhat exercised by readAndUpdateRecord,
+// though that only addresses the "inserted record is adjacent to two
+// records" case.
+static void testMergeRecords(CuTest *testCase) {
+    setup(SIZE_MAX);
+
+    // Test merging when there is an existing entry to the right.
+    stCache_setRecord(cache, 1, 12, 6, "world");
+    stCache_setRecord(cache, 1, 6, 7, "hello w");
+
+    char *s = stCache_getRecord(cache, 1, 6, INT64_MAX, &recordSize);
+    CuAssertStrEquals(testCase, "hello world", s);
+    free(s);
+
+    // Test merging when there is an existing entry to the left.
+    stCache_setRecord(cache, 2, 6, 7, "hello w");
+    stCache_setRecord(cache, 2, 12, 6, "world");
+
+    s = stCache_getRecord(cache, 2, 6, INT64_MAX, &recordSize);
+    CuAssertStrEquals(testCase, "hello world", s);
+    free(s);
+
+    // Test merging when there is an existing entry on both sides.
+    stCache_setRecord(cache, 3, 6, 5, "hello");
+    stCache_setRecord(cache, 3, 10, 3, "o w");
+    stCache_setRecord(cache, 3, 12, 6, "world");
+
+    s = stCache_getRecord(cache, 3, 6, INT64_MAX, &recordSize);
+    CuAssertStrEquals(testCase, "hello world", s);
+    free(s);
 
     teardown();
 }
@@ -198,6 +232,7 @@ CuSuite* stCacheSuite(void) {
     SUITE_ADD_TEST(suite, readAndUpdateRecord);
     SUITE_ADD_TEST(suite, readAndUpdateRecords);
     SUITE_ADD_TEST(suite, limitedSizeCache);
+    SUITE_ADD_TEST(suite, testMergeRecords);
 
     return suite;
 }
