@@ -408,3 +408,7 @@ bool stCache_recordsIdentical(const char *value, int64_t sizeOfRecord,
     }
     return 1;
 }
+
+size_t stCache_size(stCache *cache) {
+    return cache->curSize;
+}

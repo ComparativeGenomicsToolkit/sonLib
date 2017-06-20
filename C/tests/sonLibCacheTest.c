@@ -143,18 +143,21 @@ static void limitedSizeCache(CuTest *testCase) {
     // Make sure the cache holds 12 bytes
     CuAssertTrue(testCase, stCache_containsRecord(cache, 1, 0, 6));
     CuAssertTrue(testCase, stCache_containsRecord(cache, 1, 8, 6));
+    CuAssertIntEquals(testCase, 12, stCache_size(cache));
 
     // This should make the cache overflow, and evict "hello"
     stCache_setRecord(cache, 2, 0, 2, "a");
     CuAssertTrue(testCase, !stCache_containsRecord(cache, 1, 0, 6));
     CuAssertTrue(testCase, stCache_containsRecord(cache, 1, 8, 6));
     CuAssertTrue(testCase, stCache_containsRecord(cache, 2, 0, 2));
+    CuAssertIntEquals(testCase, 8, stCache_size(cache));
 
     // Add another entry, which doesn't overflow the cache
     stCache_setRecord(cache, 3, 0, 4, "abc");
     CuAssertTrue(testCase, stCache_containsRecord(cache, 1, 8, 6));
     CuAssertTrue(testCase, stCache_containsRecord(cache, 2, 0, 2));
     CuAssertTrue(testCase, stCache_containsRecord(cache, 3, 0, 4));
+    CuAssertIntEquals(testCase, 12, stCache_size(cache));
 
     // Set the LRU order to 1->2->3
     int64_t size;
@@ -168,6 +171,7 @@ static void limitedSizeCache(CuTest *testCase) {
     CuAssertTrue(testCase, stCache_containsRecord(cache, 2, 0, 2));
     CuAssertTrue(testCase, !stCache_containsRecord(cache, 3, 0, 4));
     CuAssertTrue(testCase, stCache_containsRecord(cache, 4, 0, 1));
+    CuAssertIntEquals(testCase, 9, stCache_size(cache));
 
     // Overflow again. Now 2 should be gone
     stCache_setRecord(cache, 5, 0, 4, "abcd");
@@ -176,6 +180,7 @@ static void limitedSizeCache(CuTest *testCase) {
     CuAssertTrue(testCase, !stCache_containsRecord(cache, 3, 0, 4));
     CuAssertTrue(testCase, stCache_containsRecord(cache, 4, 0, 1));
     CuAssertTrue(testCase, stCache_containsRecord(cache, 5, 0, 4));
+    CuAssertIntEquals(testCase, 11, stCache_size(cache));
 
     // We still cache strings that are too long for the cache, but
     // they boot everything else out.
@@ -188,6 +193,7 @@ static void limitedSizeCache(CuTest *testCase) {
     CuAssertTrue(testCase, !stCache_containsRecord(cache, 4, 0, 1));
     CuAssertTrue(testCase, !stCache_containsRecord(cache, 5, 0, 4));
     CuAssertTrue(testCase, stCache_containsRecord(cache, 6, 0, 88));
+    CuAssertIntEquals(testCase, 88, stCache_size(cache));
 
     teardown();
 }
@@ -206,6 +212,7 @@ static void testMergeRecords(CuTest *testCase) {
     char *s = stCache_getRecord(cache, 1, 6, INT64_MAX, &recordSize);
     CuAssertStrEquals(testCase, "hello world", s);
     free(s);
+    CuAssertIntEquals(testCase, 12, stCache_size(cache));
 
     // Test merging when there is an existing entry to the left.
     stCache_setRecord(cache, 2, 6, 7, "hello w");
@@ -214,6 +221,7 @@ static void testMergeRecords(CuTest *testCase) {
     s = stCache_getRecord(cache, 2, 6, INT64_MAX, &recordSize);
     CuAssertStrEquals(testCase, "hello world", s);
     free(s);
+    CuAssertIntEquals(testCase, 24, stCache_size(cache));
 
     // Test merging when there is an existing entry on both sides.
     stCache_setRecord(cache, 3, 6, 5, "hello");
@@ -223,6 +231,7 @@ static void testMergeRecords(CuTest *testCase) {
     s = stCache_getRecord(cache, 3, 6, INT64_MAX, &recordSize);
     CuAssertStrEquals(testCase, "hello world", s);
     free(s);
+    CuAssertIntEquals(testCase, 36, stCache_size(cache));
 
     teardown();
 }

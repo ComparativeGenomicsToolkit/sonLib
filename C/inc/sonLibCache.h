@@ -71,6 +71,11 @@ void *stCache_getRecord(stCache *cache, int64_t key, int64_t zeroBasedByteOffset
 bool stCache_recordsIdentical(const char *value, int64_t sizeOfRecord,
         const char *updatedValue, int64_t updatedSizeOfRecord);
 
+/*
+ * Gets the current size of the cache.
+ */
+size_t stCache_size(stCache *cache);
+
 #ifdef __cplusplus
 }
 #endif
