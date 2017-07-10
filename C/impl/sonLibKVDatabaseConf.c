@@ -241,6 +241,8 @@ static stKVDatabaseConf *constructFromString(const char *xmlString) {
         databaseConf = stKVDatabaseConf_constructMySql(getXmlValueRequired(hash, "host"), getXmlPort(hash),
                                                        getXmlValueRequired(hash, "user"), getXmlValueRequired(hash, "password"),
                                                        getXmlValueRequired(hash, "database_name"), getXmlValueRequired(hash, "table_name"));
+    } else if (stString_eq(type, "redis")) {
+        databaseConf = stKVDatabaseConf_constructRedis(getXmlValueRequired(hash, "host"), getXmlPort(hash));
     } else {
         stThrowNew(ST_KV_DATABASE_EXCEPTION_ID, "invalid database type \"%s\"", type);
     }
