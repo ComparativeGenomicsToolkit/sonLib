@@ -30,6 +30,8 @@
 
 //Database functions
 #ifdef HAVE_KYOTO_TYCOON
+#define __STDC_FORMAT_MACROS 1
+#include <inttypes.h>
 #include <unistd.h>
 #include <ktremotedb.h>
 #include <kclangc.h>
