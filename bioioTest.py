@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2.7
 
 #Copyright (C) 2006-2012 by Benedict Paten (benedictpaten@gmail.com)
 #

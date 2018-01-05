@@ -1,9 +1,9 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2.7
 
 #Copyright (C) 2006-2012 by Glenn Hickey
 #
 #Released under the MIT license, see LICENSE.txt
-#!/usr/bin/env python
+#!/usr/bin/env python2.7
 
 """A more general (ie arbitrary degree) tree to replace the BinaryTree
 in sonLib.tree.py.  Implemented as a lightweight wrapper over a 
