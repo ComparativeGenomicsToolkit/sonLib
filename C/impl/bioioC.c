@@ -248,7 +248,7 @@ int64_t parseInt(char **string, int64_t *j) {
     i = sscanf(*string, INT_STRING, j);
     if(i == 1) {
         *string = eatWhiteSpace(*string);
-        while(*string != '\0' && !isspace(**string)) {
+        while(**string != '\0' && !isspace(**string)) {
             (*string)++;
         }
         *string = eatWhiteSpace(*string);
@@ -269,7 +269,7 @@ int64_t parseFloat(char **string, float *j) {
     i = sscanf(*string, "%f", j);
     if(i == 1) {
         *string = eatWhiteSpace(*string);
-        while(*string != '\0' && !isspace(**string)) {
+        while(**string != '\0' && !isspace(**string)) {
             (*string)++;
         }
         *string = eatWhiteSpace(*string);
@@ -290,7 +290,7 @@ int64_t parseString(char **string, char *cA) {
     i = sscanf(*string, "%s", cA);
     if(i == 1) {
         *string = eatWhiteSpace(*string);
-        while(*string != '\0' && !isspace(**string)) {
+        while(**string != '\0' && !isspace(**string)) {
             (*string)++;
         }
         *string = eatWhiteSpace(*string);

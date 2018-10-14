@@ -242,7 +242,9 @@ static void tree_parseNewickTreeString_getNextToken(char **token, char **newickT
     assert(*token != NULL);
     free(*token);
     *token = stString_getNextWord(newickTreeString);
-    assert(*token != NULL); //Newick string must terminate with ';'
+    if (*token == NULL) {
+        st_errAbort("invalid Newick tree, doesn't end with ';': %s", **newickTreeString);
+    }
 }
 
 /*
@@ -263,8 +265,9 @@ static void tree_parseNewickString_getBranchLength(char **token, char **newickTr
         tree_parseNewickTreeString_getNextToken(token, newickTreeString);
         double distance;
         int j = sscanf(*token, "%lf", &distance);
-        (void)j;
-        assert(j == 1);
+        if (j != 1) {
+            st_errAbort("Invalid Newick tree");
+        }
         stTree_setBranchLength(tree, distance);
         tree_parseNewickTreeString_getNextToken(token, newickTreeString);
     }
@@ -273,24 +276,31 @@ static void tree_parseNewickString_getBranchLength(char **token, char **newickTr
 static stTree *tree_parseNewickStringP(char **token, char **newickTreeString) {
     stTree *tree = stTree_construct();
     if((*token)[0] == '(') {
-        assert(strlen(*token) == 1);
+        if (strlen(*token) != 1) {
+            st_errAbort("invalid Newick tree");
+        }
         tree_parseNewickTreeString_getNextToken(token, newickTreeString);
         while(1) {
             stTree_setParent(tree_parseNewickStringP(token, newickTreeString), tree);
-            assert(strlen(*token) == 1);
-            if((*token)[0] == ',') {
-                tree_parseNewickTreeString_getNextToken(token, newickTreeString);
+            if (strlen(*token) != 1) {
+                st_errAbort("invalid Newick tree");
             }
-            else {
+            if ((*token)[0] == ',') {
+                tree_parseNewickTreeString_getNextToken(token, newickTreeString);
+            } else {
                 break;
             }
         }
-        assert((*token)[0] == ')'); //for every opening bracket we must have a close bracket.
+        if ((*token)[0] != ')') {
+            st_errAbort("Invalid Newick tree, unbalanced parenthesis");
+        }
         tree_parseNewickTreeString_getNextToken(token, newickTreeString);
     }
     tree_parseNewickString_getLabel(token, newickTreeString, tree);
     tree_parseNewickString_getBranchLength(token, newickTreeString, tree);
-    assert(**token == ',' || **token == ';' || **token == ')'); //these are the correct termination criteria
+    if (!((**token == ',') || (**token == ';') || (**token == ')'))) {
+        st_errAbort("Invalid Newick tree, missing ',', ';', or ')'");
+    }
     return tree;
 }
 
@@ -310,9 +320,13 @@ stTree *stTree_parseNewickString(const char *string) {
     free(cA);
     cA = cA2;
     char *token = stString_getNextWord(&cA);
-    assert(token != NULL);
+    if (token == NULL) {
+        st_errAbort("Invalid Newick tree");
+    }
     stTree *tree = tree_parseNewickStringP(&token, &cA);
-    assert(*token == ';');
+    if (*token != ';') {
+        st_errAbort("Invalid Newick tree, missing ';'");
+    }
     free(cA2);
     free(token);
     return tree;
