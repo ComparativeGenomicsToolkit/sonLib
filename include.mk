@@ -55,12 +55,13 @@ cppflags_ultraDbg = -g -O1 -fno-inline -fno-omit-frame-pointer -fsanitize=addres
 
 #Profile flags
 cflags_prof = -Wall -Werror --pedantic -pg -O3 -g -Wno-error=unused-result
+cppflags_prof = -pg -O3 -g -Wall -funroll-loops -DNDEBUG
 
 #Flags to use
-ifndef CGL_DEBUG
-  cppflags = ${cppflags_opt}
-  cflags = ${cflags_opt}
-else
+ifneq (${CGL_PROF},)
+  cppflags = ${cppflags_prof}
+  cflags = ${cflags_prof}
+else ifneq (${CGL_DEBUG},)
   ifeq (${CGL_DEBUG},ultra)
     cppflags = ${cppflags_ultraDbg}
     cflags = ${cflags_ultraDbg}
@@ -68,6 +69,9 @@ else
     cppflags = ${cppflags_dbg}
     cflags = ${cflags_dbg}
   endif
+else
+  cppflags = ${cppflags_opt}
+  cflags = ${cflags_opt}
 endif
 # location of Tokyo cabinet
 ifndef tokyoCabinetLib
