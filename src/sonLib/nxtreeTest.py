@@ -94,7 +94,7 @@ def makeDirected(tree):
     bfq = [root]
     while len(bfq) > 0:
         node = bfq.pop()
-        for edge in dtree.out_edges(node):
+        for edge in list(dtree.out_edges(node)):
             dtree.remove_edge(edge[1], node)
             bfq.append(edge[1])        
     return dtree
