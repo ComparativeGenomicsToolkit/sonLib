@@ -59,19 +59,19 @@ cppflags_prof = -pg -O3 -g -Wall -funroll-loops -DNDEBUG
 
 #Flags to use
 ifneq (${CGL_PROF},)
-  cppflags = ${cppflags_prof}
-  cflags = ${cflags_prof}
+  cppflags += ${cppflags_prof}
+  cflags += ${cflags_prof}
 else ifneq (${CGL_DEBUG},)
   ifeq (${CGL_DEBUG},ultra)
-    cppflags = ${cppflags_ultraDbg}
-    cflags = ${cflags_ultraDbg}
+    cppflags += ${cppflags_ultraDbg}
+    cflags += ${cflags_ultraDbg}
   else
-    cppflags = ${cppflags_dbg}
-    cflags = ${cflags_dbg}
+    cppflags += ${cppflags_dbg}
+    cflags += ${cflags_dbg}
   endif
 else
-  cppflags = ${cppflags_opt}
-  cflags = ${cflags_opt}
+  cppflags += ${cppflags_opt}
+  cflags += ${cflags_opt}
 endif
 # location of Tokyo cabinet
 ifndef tokyoCabinetLib
