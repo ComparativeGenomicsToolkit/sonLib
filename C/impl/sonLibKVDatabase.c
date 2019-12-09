@@ -55,6 +55,14 @@ stKVDatabase *stKVDatabase_construct(stKVDatabaseConf *conf, bool create) {
                     "requested MySQL database, however sonlib is not compiled with MySql support");
 #endif
             break;
+        case stKVDatabaseTypeRedis:
+#ifdef HAVE_REDIS
+            stKVDatabase_initialise_Redis(database, conf, create);
+#else
+            stThrowNew(ST_KV_DATABASE_EXCEPTION_ID,
+                    "requested Redis database, however sonlib is not compiled with Redis support");
+#endif
+            break;
         default:
             stThrowNew(ST_KV_DATABASE_EXCEPTION_ID,
                     "BUG: unrecognized database type");
@@ -463,7 +471,6 @@ void *stKVDatabase_getPartialRecord(stKVDatabase *database, int64_t key,
 
 stKVDatabaseBulkResult *stKVDatabaseBulkResult_construct(void* value, int64_t sizeOfRecord)
 {
-	/* convention is to not bother creating a result for NULL values */
 	stKVDatabaseBulkResult* result = st_malloc(sizeof(stKVDatabaseBulkResult));
 	result->value = value;
 	result->size = sizeOfRecord;

@@ -60,6 +60,12 @@ void stFile_mkdir(const char *dirName);
  */
 void stFile_rmrf(const char *fileName);
 
+/*
+ * Thin wrapper around fopen that dies with a perror if the operation
+ * fails. Meant to be more informative than a random segfault later
+ * down the road.
+ */
+FILE *st_fopen(const char *fileName, const char *mode);
 
 #ifdef __cplusplus
 }

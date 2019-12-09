@@ -28,6 +28,13 @@ extern "C" {
 stCache *stCache_construct(void);
 
 /*
+ * Create an empty cache of limited size. Overhead is not counted
+ * toward the size. The cache follows a least-recently-used eviction
+ * policy.
+ */
+stCache *stCache_construct2(size_t maxSize);
+
+/*
  * Destructs the cache.
  */
 void stCache_destruct(stCache *cache);
@@ -63,6 +70,11 @@ void *stCache_getRecord(stCache *cache, int64_t key, int64_t zeroBasedByteOffset
  */
 bool stCache_recordsIdentical(const char *value, int64_t sizeOfRecord,
         const char *updatedValue, int64_t updatedSizeOfRecord);
+
+/*
+ * Gets the current size of the cache.
+ */
+size_t stCache_size(stCache *cache);
 
 #ifdef __cplusplus
 }

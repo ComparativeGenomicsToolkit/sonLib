@@ -125,3 +125,11 @@ void stFile_rmrf(const char *fileName) {
     }
     st_system("rm -rf %s", fileName);
 }
+
+FILE *st_fopen(const char *fileName, const char *mode) {
+    FILE *ret = fopen(fileName, mode);
+    if (ret == NULL) {
+        st_errnoAbort("Could not open file %s", fileName);
+    }
+    return ret;
+}

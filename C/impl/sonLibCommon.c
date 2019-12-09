@@ -11,18 +11,31 @@
  *      Author: benedictpaten
  */
 
+#define _POSIX_C_SOURCE 1 // needed for fileno()
+
 #include "sonLibGlobalsInternal.h"
 #include <errno.h>
+// We need features.h to check if __GNU_LIBRARY__ is
+// defined. Unfortunately, features.h is only available in glibc. The
+// common workaround is to include limits.h, which includes features.h
+// in glibc.
+#include <limits.h>
+#include <stdio.h>
+#ifdef __GNU_LIBRARY__
+#define USE_BACKTRACE 1
+#define MAX_BACKTRACE_DEPTH 256
+#include <execinfo.h>
+#endif // __GLIBC__
 
 static enum stLogLevel LOG_LEVEL = critical;
 
 void *st_malloc(size_t i) {
     void *j;
     j = malloc(i);
-    if (j == 0) {
-        fprintf(stderr, "Malloc failed with a request for: %zu bytes\n", i);
-        assert(0);
-        exit(1);
+    if (j == NULL) {
+        // FIXME: NULL actually isn't an error condition if 0 bytes
+        // are requested.
+        st_errnoAbort("Malloc failed with a request for: %zu bytes", i);
     }
     return j;
 }
@@ -30,9 +43,9 @@ void *st_malloc(size_t i) {
 void *st_realloc(void *buffer, size_t desiredSize) {
     void *newBuffer = realloc(buffer, desiredSize);
     if(newBuffer == NULL) {
-        fprintf(stderr, "Realloc failed with a request for: %zu bytes\n", desiredSize);
-        assert(0);
-        exit(1);
+        // FIXME: NULL actually isn't an error condition if 0 bytes
+        // are requested.
+        st_errnoAbort("Realloc failed with a request for: %zu bytes", desiredSize);
     }
     return newBuffer;
 }
@@ -40,11 +53,11 @@ void *st_realloc(void *buffer, size_t desiredSize) {
 void *st_calloc(int64_t elementNumber, size_t elementSize) {
     void *k;
     k = calloc(elementNumber, elementSize);
-    if (k == 0) {
-        fprintf(stderr,
-                "Calloc failed with request for %lld lots of %zu bytes\n",
-                (long long int) elementNumber, elementSize);
-        exit(1);
+    if (k == NULL) {
+        // FIXME: NULL actually isn't an error condition if 0 bytes
+        // are requested.
+        st_errnoAbort("Calloc failed with request for %lld lots of %zu bytes",
+                      (long long int) elementNumber, elementSize);
     }
     return k;
 }
@@ -129,7 +142,17 @@ int64_t st_system(const char *string, ...) {
     return i;
 }
 
+static void st_backtrace(void) {
+#ifdef USE_BACKTRACE
+    void **backtraceArray = st_malloc(MAX_BACKTRACE_DEPTH * sizeof(void *));
+    int depth = backtrace(backtraceArray, MAX_BACKTRACE_DEPTH);
+    backtrace_symbols_fd(backtraceArray, depth, fileno(stderr));
+    free(backtraceArray);
+#endif // USE_BACKTRACE
+}
+
 void st_errAbort(char *format, ...) {
+    st_backtrace();
     va_list ap;
     va_start(ap, format);
     vfprintf(stderr, format, ap);
@@ -139,6 +162,7 @@ void st_errAbort(char *format, ...) {
 }
 
 void st_errnoAbort(char *format, ...) {
+    st_backtrace();
     va_list ap;
     va_start(ap, format);
     vfprintf(stderr, format, ap);

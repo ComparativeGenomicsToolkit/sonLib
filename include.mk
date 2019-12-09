@@ -75,6 +75,7 @@ else
 endif
 # location of Tokyo cabinet
 ifndef tokyoCabinetLib
+HAVE_KYOTO_CABINET = $(shell pkg-config --exists kyotocabinet; echo $$?)
 ifneq ($(wildcard /hive/groups/recon/local/include/tcbdb.h),)
    # hgwdev hive install
    tcPrefix = /hive/groups/recon/local
@@ -95,11 +96,16 @@ else ifneq ($(wildcard /usr/include/tcbdb.h),)
    tcPrefix = /usr
    tokyoCabinetIncl = -I${tcPrefix}/include -DHAVE_TOKYO_CABINET=1
    tokyoCabinetLib = -L${tcPrefix}/lib -Wl,-rpath,${tcPrefix}/lib -ltokyocabinet -lz -lbz2 -lpthread -lm
+else ifeq (${HAVE_KYOTO_TYCOON},0)
+   # Install registered with pkg-config
+   tokyoCabinetIncl = $(shell pkg-config --cflags kyotocabinet) -DHAVE_KYOTO_CABINET=1
+   tokyoCabinetLib = $(shell pkg-config --libs-only-L kyotocabinet) -Wl,-rpath,$(shell pkg-config --variable=libdir kyotocabinet) $(shell pkg-config --libs-only-l --static kyotocabinet)
 endif
 endif
 
 # location of Kyoto Tycoon
 ifndef kyotoTycoonLib
+HAVE_KYOTO_TYCOON = $(shell pkg-config --exists kyototycoon; echo $$?)
 ifneq ($(wildcard /hive/groups/recon/local/include/ktcommon.h),)
    # hgwdev hive install
    ttPrefix = /hive/groups/recon/local
@@ -120,8 +126,27 @@ else ifneq ($(wildcard /usr/include/ktcommon.h),)
    ttPrefix = /usr
    kyotoTycoonIncl = -I${ttPrefix}/include -DHAVE_KYOTO_TYCOON=1 
    kyotoTycoonLib = -L${ttPrefix}/lib -Wl,-rpath,${ttPrefix}/lib -lkyototycoon -lkyotocabinet -lz -lbz2 -lpthread -lm -lstdc++
+else ifeq (${HAVE_KYOTO_TYCOON},0)
+   # Install registered with pkg-config
+   kyotoTycoonIncl = $(shell pkg-config --cflags kyototycoon) -DHAVE_KYOTO_TYCOON=1
+   kyotoTycoonLib = $(shell pkg-config --libs-only-L kyototycoon) -Wl,-rpath,$(shell pkg-config --variable=libdir kyototycoon) $(shell pkg-config --libs-only-l --static kyototycoon)
 endif
 endif
 
-dblibs = ${tokyoCabinetLib} ${kyotoTycoonLib} -lz -lm
+# location of hiredis
+ifndef hiRedisLib
+  HAVE_REDIS = $(shell pkg-config --exists hiredis; echo $$?)
+  ifeq (${HAVE_REDIS},0)
+    hiRedisLib = $(shell pkg-config --libs hiredis)
+    incs = $(shell pkg-config --cflags hiredis)
+    ifeq ($(findstring -I,${incs}),)
+      # Broken 14.04 package
+      hiRedisIncl = ${incs} -DHAVE_REDIS=1 -I/usr/include/hiredis
+    else
+      hiRedisIncl = ${incs} -DHAVE_REDIS=1
+    endif
+  endif
+endif
+
+dblibs = ${tokyoCabinetLib} ${kyotoTycoonLib} ${hiRedisLib} -lz -lm
 

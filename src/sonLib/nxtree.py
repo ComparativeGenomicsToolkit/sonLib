@@ -68,7 +68,7 @@ class NXTree(object):
         if len(edges) == 0:
             return None
         else:
-            return edges[0][0]
+            return list(edges)[0][0]
     
     def getName(self, id):
         assert id in self.nxDg
@@ -169,17 +169,7 @@ class NXTree(object):
             node = parent
         for edge in flipEdges:
             self.nxDg.add_edge(edge[1], edge[0])
-            self.nxDg[edge[1]][edge[0]] = self.nxDg[edge[0]][edge[1]]
+            for k in self.nxDg.edges[edge[0], edge[1]]:
+                self.nxDg.edges[edge[1], edge[0]][k] = self.nxDg.edges[edge[0], edge[1]][k]
             self.nxDg.remove_edge(edge[0], edge[1])
         self.rootId = newRootId
-
-        
-
-            
-                
-                
-        
-        
-    
-    
-            
