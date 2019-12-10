@@ -1,12 +1,22 @@
 include include.mk
 binPath = ./bin
 
-.PHONY: all clean cP cP.clean externalToolsP.clean test 
+.PHONY: all clean cP cP.clean externalToolsP.clean test linkLib
 
-all : cP ${binPath}/sonLib_daemonize.py
+all : cP ${binPath}/sonLib_daemonize.py linkLib
+
+# FIXME: python library was moved to the source directory without
+# fixing the other modules that depend on this.
+libFiles = $(notdir $(wildcard src/sonLib/*.py))
+linkLib: ${libFiles}
+
+%.py: src/sonLib/%.py
+	ln -sf $< $@
 
 clean : cP.clean externalToolsP.clean
 	rm -f ${binPath}/sonLib_daemonize.py
+	rm -rf ${libFiles} ${libFiles:%=%c}
+
 
 cP: externalToolsP
 	cd C && ${MAKE} all
