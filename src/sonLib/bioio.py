@@ -291,7 +291,8 @@ class TestStatus:
         """Set location in which to write inputs which created test error.
         """
         logger.info("Location to save error files in: %s" % dir)
-        assert os.path.isdir(dir)
+        if not os.path.isdir(dir):
+            raise Exception("setSaveErrorLocation: not a directory: {}".format(dir))
         TestStatus.SAVE_ERROR_LOCATION = dir
     setSaveErrorLocation = staticmethod(setSaveErrorLocation)
 
@@ -311,7 +312,8 @@ class TestStatus:
         the path where all the data sets used by tests for analysis are kept.
         These are not kept in the distrbution itself for reasons of size.
         """
-        assert "SON_TRACE_DATASETS" in os.environ
+        if "SON_TRACE_DATASETS" not in os.environ:
+            raise Exception("SON_TRACE_DATASETS not set in environment")
         return os.environ["SON_TRACE_DATASETS"]
     getPathToDataSets = staticmethod(getPathToDataSets)
 
@@ -320,7 +322,8 @@ def saveInputs(savedInputsDir, listOfFilesAndDirsToSave):
     and returns the name of this directory.
     """
     logger.info("Saving the inputs: %s to the directory: %s" % (" ".join(listOfFilesAndDirsToSave), savedInputsDir))
-    assert os.path.isdir(savedInputsDir)
+    if not os.path.isdir(savedInputsDir):
+        raise Exception("saveInputs: not a directory: {}".format(saveInputsDir))
     #savedInputsDir = getTempDirectory(saveInputsDir)
     createdFiles = []
     for fileName in listOfFilesAndDirsToSave:
@@ -458,7 +461,7 @@ def getTempDirectory(rootDir=None):
             except OSError:
                 # Maybe it got created between the test and the makedirs call?
                 pass
-            
+
         while True:
             # Keep trying names until we find one that doesn't exist. If one
             # does exist, don't nest inside it, because someone else may be
@@ -466,7 +469,7 @@ def getTempDirectory(rootDir=None):
             tmpDir = os.path.join(rootDir, "tmp_" + getRandomAlphaNumericString())
             if not os.path.exists(tmpDir):
                 break
-                
+
         os.mkdir(tmpDir)
         os.chmod(tmpDir, 0777) #Ensure everyone has access to the file.
         return tmpDir
@@ -639,7 +642,7 @@ def padWord(word, length=25):
     if len(word) < length:
         return word + " "*(length-len(word))
     return word
-    
+
 #########################################################
 #########################################################
 #########################################################
@@ -758,7 +761,7 @@ def fastaWrite(fileHandleOrFile, name, seq, mode="w"):
         fileHandle.write("%s\n" % seq[i:i+chunkSize])
     if isinstance(fileHandleOrFile, "".__class__):
         fileHandle.close()
-        
+
 def fastqRead(fileHandleOrFile):
     """Reads a fastq file iteratively
     """
