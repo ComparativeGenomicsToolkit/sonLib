@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python33
 
 #Copyright (C) 2006-2012 by Benedict Paten (benedictpaten@gmail.com)
 #
@@ -24,8 +24,8 @@ from subprocess import check_call, Popen
 def needs(program):
     """Decorator: Run this test only if "program" is available."""
     def wrap(fn):
-        print fn
-        print program
+        print(fn)
+        print(program)
         try:
             check_call([program, "--version"])
         except:

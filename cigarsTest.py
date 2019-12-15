@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python33
 
 #Copyright (C) 2006-2012 by Benedict Paten (benedictpaten@gmail.com)
 #
@@ -36,9 +36,9 @@ class TestCase(unittest.TestCase):
         """
         tempFile = getTempFile()
         self.tempFiles.append(tempFile)
-        for test in xrange(0, self.testNo):
-            pairwiseAlignmentNumber = random.choice(xrange(10))
-            l = [ getRandomPairwiseAlignment() for i in xrange(pairwiseAlignmentNumber) ]
+        for test in range(0, self.testNo):
+            pairwiseAlignmentNumber = random.choice(range(10))
+            l = [ getRandomPairwiseAlignment() for i in range(pairwiseAlignmentNumber) ]
             fileHandle = open(tempFile, 'w')
             
             keepProbs = random.random() > 0.5

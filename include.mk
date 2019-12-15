@@ -2,6 +2,8 @@
 HOSTNAME = $(shell hostname)
 MACH = $(shell uname -m)
 SYS =  $(shell uname -s)
+PYTHON = python3
+
 
 #C compiler. FIXME: for some reason the cxx variable is used, which
 #typically means C++ compiler.
