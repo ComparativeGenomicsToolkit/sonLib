@@ -7,12 +7,12 @@ import unittest
 import time
 import bioioTest
 import cigarsTest
-import treeTest
+from sonLib import treeTest
 try:
     import networkx as NX
     networkx_installed = True
-    import nxtreeTest
-    import nxnewickTest
+    from sonLib import nxtreeTest
+    from sonLib import nxnewickTest
 except ImportError:
     networkx_installed = False
 
@@ -78,15 +78,15 @@ def allSuites():
         allTests = unittest.TestSuite((bioioSuite, cigarsSuite, treeSuite, cuTestsSuite,
                                        nxtreeSuite, nxnewickSuite))
     return allTests
-        
+
 def main():
     parseSuiteTestOptions()
-    
+
     suite = allSuites()
     runner = unittest.TextTestRunner(verbosity=2)
     i = runner.run(suite)
     return len(i.failures) + len(i.errors)
-        
+
 if __name__ == '__main__':
     import sys
     sys.exit(main())

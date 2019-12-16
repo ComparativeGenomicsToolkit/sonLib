@@ -10,27 +10,27 @@ import os
 import sys
 import random
 
-from bioio import getTempFile
+from sonLib.bioio import getTempFile
 
-from bioio import cigarRead
-from bioio import cigarWrite
-from bioio import getRandomPairwiseAlignment
-from bioio import system
+from sonLib.bioio import cigarRead
+from sonLib.bioio import cigarWrite
+from sonLib.bioio import getRandomPairwiseAlignment
+from sonLib.bioio import system
 from sonLib.bioio import TestStatus
 from sonLib.bioio import logger
 
 class TestCase(unittest.TestCase):
-    
+
     def setUp(self):
         self.testNo = TestStatus.getTestSetup()
         self.tempFiles = []
         unittest.TestCase.setUp(self)
-    
+
     def tearDown(self):
         for tempFile in self.tempFiles:
             os.remove(tempFile)
         unittest.TestCase.tearDown(self)
-    
+
     def testCigarReadWrite(self):
         """Tests the C code for reading and writing cigars against the python parser for cigars.
         """
@@ -40,13 +40,13 @@ class TestCase(unittest.TestCase):
             pairwiseAlignmentNumber = random.choice(range(10))
             l = [ getRandomPairwiseAlignment() for i in range(pairwiseAlignmentNumber) ]
             fileHandle = open(tempFile, 'w')
-            
+
             keepProbs = random.random() > 0.5
             if keepProbs == False:
                 for pA in l:
                     for op in pA.operationList:
                         op.score = 0.0
-            
+
             for pairwiseAlignment in l:
                 cigarWrite(fileHandle, pairwiseAlignment, keepProbs)
             fileHandle.close()
@@ -55,11 +55,11 @@ class TestCase(unittest.TestCase):
             command = "sonLib_cigarTest %s %s" % (tempFile, keepProbs)
             #return
             system(command)
-            
+
             #Now check the chain is okay
             fileHandle = open(tempFile, 'r')
             l.reverse()
-            
+
             for pairwiseAlignment in cigarRead(fileHandle):
                 pairwiseAlignment2 = l.pop()
                 cigarWrite(sys.stdout, pairwiseAlignment, keepProbs)
@@ -67,6 +67,6 @@ class TestCase(unittest.TestCase):
                 assert pairwiseAlignment == pairwiseAlignment2
             assert len(l) == 0
             fileHandle.close()
-        
+
 if __name__ == '__main__':
     unittest.main()
