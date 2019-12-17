@@ -98,7 +98,7 @@ else ifneq ($(wildcard /usr/include/tcbdb.h),)
    tcPrefix = /usr
    tokyoCabinetIncl = -I${tcPrefix}/include -DHAVE_TOKYO_CABINET=1
    tokyoCabinetLib = -L${tcPrefix}/lib -Wl,-rpath,${tcPrefix}/lib -ltokyocabinet -lz -lbz2 -lpthread -lm
-else ifeq (${HAVE_KYOTO_TYCOON},0)
+else ifeq (${HAVE_KYOTO_CABINET},0)
    # Install registered with pkg-config
    tokyoCabinetIncl = $(shell pkg-config --cflags kyotocabinet) -DHAVE_KYOTO_CABINET=1
    tokyoCabinetLib = $(shell pkg-config --libs-only-L kyotocabinet) -Wl,-rpath,$(shell pkg-config --variable=libdir kyotocabinet) $(shell pkg-config --libs-only-l --static kyotocabinet)
