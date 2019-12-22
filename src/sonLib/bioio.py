@@ -1,4 +1,4 @@
-#!/usr/bin/env python33
+#!/usr/bin/env python3
 
 #Copyright (C) 2006-2012 by Benedict Paten (benedictpaten@gmail.com)
 #
@@ -19,7 +19,6 @@ from optparse import OptionParser, OptionContainer, OptionGroup
 from sonLib.tree import BinaryTree
 from sonLib.misc import close
 import subprocess
-import array
 import string
 import xml.etree.cElementTree as ET
 from xml.dom import minidom  # For making stuff pretty
@@ -718,24 +717,24 @@ def fastaRead(fileHandleOrFile):
     """
     fileHandle = _getFileHandle(fileHandleOrFile)
     line = fileHandle.readline()
-    chars_to_remove = "\n "
     valid_chars = {x for x in string.ascii_letters + "-"}
     while line != '':
         if line[0] == '>':
             name = line[1:-1]
             line = fileHandle.readline()
-            seq = array.array('c')
+            seq = []
             while line != '' and line[0] != '>':
-                line = line.translate(None, chars_to_remove)
+                line = re.sub("[\\s]+", "", line)
                 if len(line) > 0 and line[0] != '#':
-                    seq.extend(line)
+                    seq.append(line)
                 line = fileHandle.readline()
+            seq = "".join(seq)
             try:
                 assert all(x in valid_chars for x in seq)
             except AssertionError:
                 bad_chars = {x for x in seq if x not in valid_chars}
                 raise RuntimeError("Invalid FASTA character(s) see in fasta sequence: {}".format(bad_chars))
-            yield name, seq.tostring()
+            yield name, seq
         else:
             line = fileHandle.readline()
     if isinstance(fileHandleOrFile, "".__class__):
@@ -949,13 +948,14 @@ def newickTreeParser(newickTree, defaultDistance=DEFAULT_DISTANCE, \
     """
     lax newick tree parser
     """
+    # FIXME: replace with nxtree.py
     newickTree = newickTree.replace("(", " ( ")
     newickTree = newickTree.replace(")", " ) ")
     newickTree = newickTree.replace(":", " : ")
     newickTree = newickTree.replace(";", "")
     newickTree = newickTree.replace(",", " , ")
 
-    newickTree = re.compile("[\s]*").split(newickTree)
+    newickTree = re.compile("[\\s]+").split(newickTree)
     while "" in newickTree:
         newickTree.remove("")
     def fn(newickTree, i):
@@ -983,14 +983,8 @@ def newickTreeParser(newickTree, defaultDistance=DEFAULT_DISTANCE, \
                     i[0] += 1
                 subTreeList.append(fn3(newickTree, i))
             i[0] += 1
-            def cmp(i, j):
-                if i.distance < j.distance:
-                    return -1
-                if i.distance > j.distance:
-                    return 1
-                return 0
             if sortNonBinaryNodes:
-                subTreeList.sort(cmp)
+                subTreeList.sort(key=lambda n: n.distance)
             subTree1 = subTreeList[0]
             if len(subTreeList) > 1:
                 for subTree2 in subTreeList[1:]:

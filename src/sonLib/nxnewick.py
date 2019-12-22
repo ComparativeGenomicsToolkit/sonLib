@@ -1,9 +1,9 @@
-#!/usr/bin/env python33
+#!/usr/bin/env python3
 
 #Copyright (C) 2006-2012 by Glenn Hickey
 #
 #Released under the MIT license, see LICENSE.txt
-#!/usr/bin/env python33
+#!/usr/bin/env python3
 
 """read and write newick trees to and from networkx graphs (as wrapped by nxtree).
 """
@@ -14,7 +14,7 @@ import math
 import random
 from string import whitespace as ws
 from sonLib.misc import close
-from sonlib import bioio
+from sonLib import bioio
 import networkx as NX
 from optparse import OptionParser
 from sonLib.nxtree import NXTree
@@ -149,7 +149,7 @@ class NXNewick(object):
         self.nextId += 1
         self.nxTree.nxDg.add_node(id)
         if len(name) > 0:
-            self.nxTree.nxDg.node[id]['name'] = name
+            self.nxTree.nxDg.nodes[id]['name'] = name
 
         #update the graph
         if parent is not None:

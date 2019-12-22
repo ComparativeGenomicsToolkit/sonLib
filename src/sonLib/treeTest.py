@@ -1,4 +1,4 @@
-#!/usr/bin/env python33
+#!/usr/bin/env python3
 
 #Copyright (C) 2006-2012 by Benedict Paten (benedictpaten@gmail.com)
 #
@@ -141,7 +141,7 @@ class TestCase(unittest.TestCase):
                         #geneString9, geneString10, geneString11 ]
         for geneString, rootedGeneString in geneStrings:
             geneTree = newickTreeParser(geneString)
-            rootedGeneTree = newickTreeParser(geneString)
+            rootedGeneTree = newickTreeParser(rootedGeneString)
             binaryTree_depthFirstNumbers(geneTree)
             rootedGeneTree2, dupCount, lossCount = calculateProbableRootOfGeneTree(speciesTree, geneTree)
             print("rootedGeneTree", rootedGeneString, dupCount, lossCount, printBinaryTree(rootedGeneTree2, False))

@@ -1,4 +1,4 @@
-#!/usr/bin/env python33
+#!/usr/bin/env python3
 
 #Copyright (C) 2006-2012 by Benedict Paten (benedictpaten@gmail.com)
 #
@@ -772,7 +772,7 @@ def calculateProbableRootOfGeneTree(speciesTree, geneTree, processID=lambda x : 
             fn(tree.left)
             fn(tree.right)
     fn(geneTree)
-    l.sort()
+    l.sort(key=lambda e: e[0:1])
     return l[0][2], l[0][0], l[0][1]
 
 #add traversalID.mid to each node name

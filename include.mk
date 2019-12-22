@@ -4,6 +4,30 @@ MACH = $(shell uname -m)
 SYS =  $(shell uname -s)
 PYTHON = python3
 
+##
+# For GCC, the C++ 11 aplication binary interface must match the version
+# that HDF5 uses.  Change the ABI version can address errors about undefined functions that vary
+# by string type, such as 
+#   std::__cxx11::basic_string vs std::basic_string
+#
+# Specify one of:
+#   CXX_ABI_DEF = -D_GLIBCXX_USE_CXX11_ABI=0
+# or
+#   CXX_ABI_DEF = -D_GLIBCXX_USE_CXX11_ABI=1
+#
+# in include.local.mk or the environment will change the API.
+# You must do a make clean if you change this variable.
+
+# special handling to get C++ ABI right on UCSC Centos 6 servers
+ifeq (${CXX_ABI_DEF},)
+ifneq ($(wildcard /etc/redhat-release),)
+ifeq ($(shell hostname -d), gi.ucsc.edu)
+    export CXX_ABI_DEF = -D_GLIBCXX_USE_CXX11_ABI=0
+endif
+endif
+endif
+cppflags += ${CXX_ABI_DEF}
+
 
 #C compiler. FIXME: for some reason the cxx variable is used, which
 #typically means C++ compiler.
@@ -77,7 +101,7 @@ else
 endif
 # location of Tokyo cabinet
 ifndef tokyoCabinetLib
-HAVE_KYOTO_CABINET = $(shell pkg-config --exists kyotocabinet; echo $$?)
+HAVE_TOKYO_CABINET = $(shell pkg-config --exists tokyocabinet; echo $$?)
 ifneq ($(wildcard /hive/groups/recon/local/include/tcbdb.h),)
    # hgwdev hive install
    tcPrefix = /hive/groups/recon/local
@@ -98,10 +122,10 @@ else ifneq ($(wildcard /usr/include/tcbdb.h),)
    tcPrefix = /usr
    tokyoCabinetIncl = -I${tcPrefix}/include -DHAVE_TOKYO_CABINET=1
    tokyoCabinetLib = -L${tcPrefix}/lib -Wl,-rpath,${tcPrefix}/lib -ltokyocabinet -lz -lbz2 -lpthread -lm
-else ifeq (${HAVE_KYOTO_CABINET},0)
+else ifeq (${HAVE_TOKYO_CABINET},0)
    # Install registered with pkg-config
-   tokyoCabinetIncl = $(shell pkg-config --cflags kyotocabinet) -DHAVE_KYOTO_CABINET=1
-   tokyoCabinetLib = $(shell pkg-config --libs-only-L kyotocabinet) -Wl,-rpath,$(shell pkg-config --variable=libdir kyotocabinet) $(shell pkg-config --libs-only-l --static kyotocabinet)
+   tokyoCabinetIncl = $(shell pkg-config --cflags tokyocabinet) -DHAVE_TOKYO_CABINET=1
+   tokyoCabinetLib = $(shell pkg-config --libs-only-L tokyocabinet) -Wl,-rpath,$(shell pkg-config --variable=libdir tokyocabinet) $(shell pkg-config --libs-only-l --static tokyocabinet)
 endif
 endif
 

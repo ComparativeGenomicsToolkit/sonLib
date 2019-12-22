@@ -1,4 +1,4 @@
-#!/usr/bin/env python33
+#!/usr/bin/env python3
 
 #Copyright (C) 2006-2012 by Benedict Paten (benedictpaten@gmail.com)
 #
@@ -10,6 +10,7 @@ import os
 import sys
 import random
 import math
+import io
 
 from sonLib.bioio import getTempFile
 from sonLib.bioio import getTempDirectory
@@ -141,10 +142,12 @@ class TestCase(unittest.TestCase):
             fileHandle.close()
             fileHandle = open(tempFile, 'r')
             l.reverse()
+            outFh = io.StringIO()
             for i in fastaRead(fileHandle):
                 assert i == l.pop()
                 name, seq = i
-                fastaWrite(sys.stdout, name, seq)
+                fastaWrite(outFh, name, seq)
+            outFh.close()
             fileHandle.close()
 
     def testFastqReadWrite(self):
@@ -158,10 +161,12 @@ class TestCase(unittest.TestCase):
                 fastqWrite(fH, name, seq, quals)
             fH.close()
             fastqs.reverse()
+            outFh = io.StringIO()
             for i in fastqRead(tempFile):
                 assert i == fastqs.pop()
                 name, seq, quals = i
-                fastqWrite(sys.stdout, name, seq, quals)
+                fastqWrite(outFh, name, seq, quals)
+            outFh.close()
 
     def testFastaReadWriteC(self):
         """Tests consistency with C version of this function.
@@ -186,10 +191,12 @@ class TestCase(unittest.TestCase):
 
             fileHandle = open(tempFile2, 'r')
             l.reverse()
+            outFh = io.StringIO()
             for i in fastaRead(fileHandle):
                 name, seq = i
                 assert i == l.pop()
-                fastaWrite(sys.stdout, name, seq)
+                fastaWrite(outFh, name, seq)
+            outFh.close()
             fileHandle.close()
 
     #########################################################
