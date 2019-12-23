@@ -184,32 +184,33 @@ def system(command):
         raise RuntimeError("Command: %s exited with non-zero status %i" % (command, sts))
     return sts
 
-def popen(command, tempFile):
+def popen(command, tempFile, encoding="ascii"):
     """Runs a command and captures standard out in the given temp file.
     """
     fileHandle = open(tempFile, 'w')
     logger.debug("Running the command: %s" % command)
-    sts = subprocess.call(command, shell=True, stdout=fileHandle, bufsize=-1)
+    sts = subprocess.call(command, shell=True, stdout=fileHandle, bufsize=-1, encoding=encoding)
     fileHandle.close()
     if sts != 0:
         raise RuntimeError("Command: %s exited with non-zero status %i" % (command, sts))
     return sts
 
-def popenCatch(command, stdinString=None):
+def popenCatch(command, stdinString=None, encoding="ascii"):
     """Runs a command and return standard out.
     """
     logger.debug("Running the command: %s" % command)
     if stdinString != None:
-        process = subprocess.Popen(command, shell=True,
+        process = subprocess.Popen(command, shell=True, encoding=encoding,
                                    stdin=subprocess.PIPE, stdout=subprocess.PIPE, bufsize=-1)
         output, nothing = process.communicate(stdinString)
     else:
-        process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=sys.stderr, bufsize=-1)
-        output, nothing = process.communicate() #process.stdout.read().strip()
+        process = subprocess.Popen(command, shell=True, encoding=encoding,
+                                   stdout=subprocess.PIPE, stderr=sys.stderr, bufsize=-1)
+        output, nothing = process.communicate()
     sts = process.wait()
     if sts != 0:
         raise RuntimeError("Command: %s with stdin string '%s' exited with non-zero status %i" % (command, stdinString, sts))
-    return output #process.stdout.read().strip()
+    return output
 
 def popenPush(command, stdinString=None):
     if stdinString == None:
