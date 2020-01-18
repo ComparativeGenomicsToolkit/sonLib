@@ -54,10 +54,10 @@ ifndef CXX
   else ifeq ($(SYS),Darwin) #This is to deal with the Mavericks replacing gcc with clang fully
     cpp = clang++
   else
-    cpp = g++ -std=c++0x -fpermissive
+    cpp = g++
   endif
 else
-  cpp = ${CXX} -std=c++0x -fpermissive
+  cpp = ${CXX}
 endif
 
 # -Wno-unused-result
