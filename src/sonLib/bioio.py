@@ -272,21 +272,22 @@ class TestStatus:
 
     SAVE_ERROR_LOCATION = None
 
+    @staticmethod
     def getTestStatus():
         return TestStatus.TEST_STATUS
-    getTestStatus = staticmethod(getTestStatus)
 
+    @staticmethod
     def setTestStatus(status):
         assert status in (TestStatus.TEST_SHORT, TestStatus.TEST_MEDIUM, TestStatus.TEST_LONG, TestStatus.TEST_VERY_LONG)
         TestStatus.TEST_STATUS = status
-    setTestStatus = staticmethod(setTestStatus)
 
+    @staticmethod
     def getSaveErrorLocation():
         """Location to in which to write inputs which created test error.
         """
         return TestStatus.SAVE_ERROR_LOCATION
-    getSaveErrorLocation = staticmethod(getSaveErrorLocation)
 
+    @staticmethod
     def setSaveErrorLocation(dir):
         """Set location in which to write inputs which created test error.
         """
@@ -294,8 +295,8 @@ class TestStatus:
         if not os.path.isdir(dir):
             raise Exception("setSaveErrorLocation: not a directory: {}".format(dir))
         TestStatus.SAVE_ERROR_LOCATION = dir
-    setSaveErrorLocation = staticmethod(setSaveErrorLocation)
 
+    @staticmethod
     def getTestSetup(shortTestNo=1, mediumTestNo=5, longTestNo=100, veryLongTestNo=0):
         if TestStatus.TEST_STATUS == TestStatus.TEST_SHORT:
             return shortTestNo
@@ -305,8 +306,8 @@ class TestStatus:
             return longTestNo
         else: #Used for long example tests
             return veryLongTestNo
-    getTestSetup = staticmethod(getTestSetup)
 
+    @staticmethod
     def getPathToDataSets():
         """This method is used to store the location of
         the path where all the data sets used by tests for analysis are kept.
@@ -315,7 +316,6 @@ class TestStatus:
         if "SON_TRACE_DATASETS" not in os.environ:
             raise Exception("SON_TRACE_DATASETS not set in environment")
         return os.environ["SON_TRACE_DATASETS"]
-    getPathToDataSets = staticmethod(getPathToDataSets)
 
 def saveInputs(savedInputsDir, listOfFilesAndDirsToSave):
     """Copies the list of files to a directory created in the save inputs dir,
