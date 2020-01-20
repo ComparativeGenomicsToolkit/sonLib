@@ -14,6 +14,7 @@ import tempfile
 import random
 import math
 import shutil
+import unittest
 from argparse import ArgumentParser
 from optparse import OptionParser, OptionContainer, OptionGroup
 from sonLib.tree import BinaryTree
@@ -261,31 +262,45 @@ def absSymPath(path):
 #########################################################
 #########################################################
 
+def parseTestLength(l):
+    l = l.upper()
+    if l == "SHORT":
+        return TestStatus.TEST_SHORT
+    elif l == "MEDIUM":
+        return TestStatus.TEST_MEDIUM
+    elif l == "LONG":
+        return TestStatus.TEST_LONG
+    elif l == "VERY_LONG":
+        return TestStatus.TEST_VERY_LONG
+    else:
+        raise ValueError("unknown test length \"{}\", expect one of SHORT MEDIUM LONG VERY_LONG".format(l))
+
+
 class TestStatus:
-    ###Global variables used by testing framework to run tests.
+    ###Global constants variables used by testing framework to run tests.
     TEST_SHORT = 0
     TEST_MEDIUM = 1
     TEST_LONG = 2
     TEST_VERY_LONG = 3
 
-    TEST_STATUS = TEST_SHORT
+    length = TEST_SHORT  # can be overridden with SONLIB_TEST_LENGTH environment variable
 
-    SAVE_ERROR_LOCATION = None
-
-    @staticmethod
-    def getTestStatus():
-        return TestStatus.TEST_STATUS
+    saveErrorLocation = None
 
     @staticmethod
-    def setTestStatus(status):
-        assert status in (TestStatus.TEST_SHORT, TestStatus.TEST_MEDIUM, TestStatus.TEST_LONG, TestStatus.TEST_VERY_LONG)
-        TestStatus.TEST_STATUS = status
+    def getTestLength():
+        return TestStatus.length
+
+    @staticmethod
+    def setTestLength(length):
+        assert length in (TestStatus.TEST_SHORT, TestStatus.TEST_MEDIUM, TestStatus.TEST_LONG, TestStatus.TEST_VERY_LONG)
+        TestStatus.length = length
 
     @staticmethod
     def getSaveErrorLocation():
         """Location to in which to write inputs which created test error.
         """
-        return TestStatus.SAVE_ERROR_LOCATION
+        return TestStatus.saveErrorLocation
 
     @staticmethod
     def setSaveErrorLocation(dir):
@@ -294,15 +309,15 @@ class TestStatus:
         logger.info("Location to save error files in: %s" % dir)
         if not os.path.isdir(dir):
             raise Exception("setSaveErrorLocation: not a directory: {}".format(dir))
-        TestStatus.SAVE_ERROR_LOCATION = dir
+        TestStatus.saveErrorLocation = dir
 
     @staticmethod
     def getTestSetup(shortTestNo=1, mediumTestNo=5, longTestNo=100, veryLongTestNo=0):
-        if TestStatus.TEST_STATUS == TestStatus.TEST_SHORT:
+        if TestStatus.length == TestStatus.TEST_SHORT:
             return shortTestNo
-        elif TestStatus.TEST_STATUS == TestStatus.TEST_MEDIUM:
+        elif TestStatus.length == TestStatus.TEST_MEDIUM:
             return mediumTestNo
-        elif TestStatus.TEST_STATUS == TestStatus.TEST_LONG:
+        elif TestStatus.length == TestStatus.TEST_LONG:
             return longTestNo
         else: #Used for long example tests
             return veryLongTestNo
@@ -316,6 +331,50 @@ class TestStatus:
         if "SON_TRACE_DATASETS" not in os.environ:
             raise Exception("SON_TRACE_DATASETS not set in environment")
         return os.environ["SON_TRACE_DATASETS"]
+
+    @staticmethod
+    def shortLength(testItem):
+        """Use as a decorator to indicate short-length tests"""
+        if TestStatus.getTestLength() >= TestStatus.TEST_SHORT:
+            return testItem
+        else:
+            return unittest.skip('short-length tests skipped')(testItem)
+
+    @staticmethod
+    def mediumLength(testItem):
+        """Use as a decorator to indicate medium-length tests"""
+        if TestStatus.getTestLength() >= TestStatus.TEST_MEDIUM:
+            return testItem
+        else:
+            return unittest.skip('medium-length tests skipped')(testItem)
+
+    @staticmethod
+    def longLength(testItem):
+        """Use as a decorator to indicate long-length tests"""
+        if TestStatus.getTestLength() >= TestStatus.TEST_LONG:
+            return testItem
+        else:
+            return unittest.skip('long-length tests skipped')(testItem)
+
+    @staticmethod
+    def veryLongLength(testItem):
+        """Use as a decorator to  indicate very long-length tests"""
+        if TestStatus.getTestLength() >= TestStatus.TEST_VERY_LONG:
+            return testItem
+        else:
+            return unittest.skip('very long-length tests skipped')(testItem)
+
+    @staticmethod
+    def needsTestData(testItem):
+        """Use as a decorator for tests that need SON_TRACE_DATASETS set"""
+        if "SON_TRACE_DATASETS" in os.environ:
+            return testItem
+        else:
+            return unittest.skip('SON_TRACE_DATASETS not set in environment')(testItem)
+
+
+if "SONLIB_TEST_LENGTH" in os.environ:
+    TestStatus.setTestLength(parseTestLength(os.environ["SONLIB_TEST_LENGTH"]))
 
 def saveInputs(savedInputsDir, listOfFilesAndDirsToSave):
     """Copies the list of files to a directory created in the save inputs dir,
@@ -383,17 +442,10 @@ def parseSuiteTestOptions(parser=None):
     options, args = parseBasicOptions(parser)
     logger.info("Parsed arguments")
 
-    if options.testLength == "SHORT":
-        TestStatus.setTestStatus(TestStatus.TEST_SHORT)
-    elif options.testLength == "MEDIUM":
-        TestStatus.setTestStatus(TestStatus.TEST_MEDIUM)
-    elif options.testLength == "LONG":
-        TestStatus.setTestStatus(TestStatus.TEST_LONG)
-    elif options.testLength == "VERY_LONG":
-        TestStatus.setTestStatus(TestStatus.TEST_VERY_LONG)
-    else:
-        parser.error('Unrecognised option for --testLength, %s. Options are SHORT, MEDIUM, LONG, VERY_LONG.' %
-                     options.testLength)
+    try:
+        TestStatus.setTestLength(parseTestLength(options.testLength))
+    except ValueError as ex:
+        parser.error("Unrecognized option for --testLength: {}".format(str(ex)))
 
     if options.saveError is not None:
         TestStatus.setSaveErrorLocation(options.saveError)
