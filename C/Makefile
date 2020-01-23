@@ -12,8 +12,9 @@ quickTreeLibPath = ../externalTools/quicktree_1.1/include/
 
 testProgs = ${binPath}/sonLibTests ${binPath}/sonLib_kvDatabaseTest ${binPath}/sonLib_cigarTest ${binPath}/sonLib_fastaCTest
 
-cflags += ${tokyoCabinetIncl} ${kyotoTycoonIncl} ${tokyoTyrantIncl} ${mysqlIncl} ${pgsqlIncl} -I${quickTreeLibPath} ${hiRedisIncl}
-cppflags += ${kyotoTycoonIncl}
+dbInclFlags = ${tokyoCabinetIncl} ${kyotoTycoonIncl} ${tokyoTyrantIncl} ${mysqlIncl} ${pgsqlIncl} -I${quickTreeLibPath} ${hiRedisIncl}
+cflags += ${dbInclFlags}
+cppflags += ${dbInclFlags}
 
 all : ${libPath}/sonLib.a ${testProgs}
 
@@ -60,4 +61,4 @@ ${libPath}/sonLib.a : ${libSources} ${cppSources} $(foreach l, ${libHeaders}, ${
 	mv sonLib.a ${libPath}/
 
 test:
-	python allTests.py --testLength=SHORT --logLevel CRITICAL
+	${PYTHON} allTests.py --testLength=SHORT --logLevel CRITICAL

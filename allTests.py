@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 #Copyright (C) 2006-2012 by Benedict Paten (benedictpaten@gmail.com)
 #
@@ -7,12 +7,12 @@ import unittest
 import time
 import bioioTest
 import cigarsTest
-import treeTest
+from sonLib import treeTest
 try:
     import networkx as NX
     networkx_installed = True
-    import nxtreeTest
-    import nxnewickTest
+    from sonLib import nxtreeTest
+    from sonLib import nxnewickTest
 except ImportError:
     networkx_installed = False
 
@@ -24,8 +24,8 @@ from subprocess import check_call, Popen
 def needs(program):
     """Decorator: Run this test only if "program" is available."""
     def wrap(fn):
-        print fn
-        print program
+        print(fn)
+        print(program)
         try:
             check_call([program, "--version"])
         except:
@@ -78,15 +78,15 @@ def allSuites():
         allTests = unittest.TestSuite((bioioSuite, cigarsSuite, treeSuite, cuTestsSuite,
                                        nxtreeSuite, nxnewickSuite))
     return allTests
-        
+
 def main():
     parseSuiteTestOptions()
-    
+
     suite = allSuites()
     runner = unittest.TextTestRunner(verbosity=2)
     i = runner.run(suite)
     return len(i.failures) + len(i.errors)
-        
+
 if __name__ == '__main__':
     import sys
     sys.exit(main())
