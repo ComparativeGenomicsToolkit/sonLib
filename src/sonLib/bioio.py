@@ -14,6 +14,7 @@ import tempfile
 import random
 import math
 import shutil
+import resource
 import unittest
 from argparse import ArgumentParser
 from optparse import OptionParser, OptionContainer, OptionGroup
@@ -372,6 +373,23 @@ class TestStatus:
         else:
             return unittest.skip('SON_TRACE_DATASETS not set in environment')(testItem)
 
+    @staticmethod
+    def toilThreadHog(testItem):
+        """skip test if there are too low a process for user due to toil being a pig with threads"""
+        # FIXME: fix Toil
+        needThreads = 8192  # a guess
+        maxThreads = resource.getrlimit(resource.RLIMIT_NPROC)[0]
+        if needThreads > maxThreads:
+            return unittest.skip("Toil problem: Toil needs to create a large number of threads, raise ulimit -u to at least {}, currently {}".format(needThreads, maxThreads))(testItem)
+        else:
+            return testItem
+
+    @staticmethod
+    def travisCoreLimit(testItem):
+        if os.environ.get("TRAVIS") is not None:
+            return unittest.skip("Travis doesn't have enough cores for this test")(testItem)
+        else:
+            return testItem
 
 if "SONLIB_TEST_LENGTH" in os.environ:
     TestStatus.setTestLength(parseTestLength(os.environ["SONLIB_TEST_LENGTH"]))
