@@ -153,6 +153,7 @@ static void st_backtrace(void) {
 
 void st_errAbort(char *format, ...) {
     st_backtrace();
+    fprintf(stderr, "ERROR: ");
     va_list ap;
     va_start(ap, format);
     vfprintf(stderr, format, ap);
@@ -163,6 +164,7 @@ void st_errAbort(char *format, ...) {
 
 void st_errnoAbort(char *format, ...) {
     st_backtrace();
+    fprintf(stderr, "ERROR: ");
     va_list ap;
     va_start(ap, format);
     vfprintf(stderr, format, ap);
