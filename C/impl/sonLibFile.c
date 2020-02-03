@@ -97,6 +97,11 @@ void stFile_mkdir(const char *dirName) {
     }
 }
 
+void stFile_mkdirp(const char *dirName) {
+    st_system("mkdir -m 0777 -p %s", dirName);
+}
+
+
 stList *stFile_getFileNamesInDirectory(const char *dir) {
     if (!stFile_exists(dir)) {
         stThrowNew(ST_FILE_EXCEPTION, "Directory does not exist exist: %s\n",
@@ -123,6 +128,10 @@ void stFile_rmrf(const char *fileName) {
         stThrowNew(ST_FILE_EXCEPTION, "File to remove does not exist: %s\n",
                 fileName);
     }
+    stFile_rmtree(fileName);
+}
+
+void stFile_rmtree(const char *fileName) {
     st_system("rm -rf %s", fileName);
 }
 

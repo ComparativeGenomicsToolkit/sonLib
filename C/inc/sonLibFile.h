@@ -56,9 +56,26 @@ stList *stFile_getFileNamesInDirectory(const char *dir);
 void stFile_mkdir(const char *dirName);
 
 /*
+ * Creates a directory with 777 access permissions, throws exceptions if unsuccessful.
+ */
+void stFile_mkdir(const char *dirName);
+
+/*
+ * Creates a directory and missing parents with 777 access permissions, throws exceptions if unsuccessful.
+ */
+void stFile_mkdirp(const char *dirName);
+
+/*
  * Forceably remove a file. If a dir, removes dir and children. Be careful.
+ * The file must exist.
  */
 void stFile_rmrf(const char *fileName);
+
+/*
+ * Forceably remove a file. If a dir, removes dir and children. Be careful.
+ * The file does not have to exist.
+ */
+void stFile_rmtree(const char *fileName);
 
 /*
  * Thin wrapper around fopen that dies with a perror if the operation
