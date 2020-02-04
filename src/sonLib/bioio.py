@@ -44,11 +44,11 @@ def __setDefaultLogger():
             return l
     handler = logging.StreamHandler(sys.stderr)
     l.addHandler(handler)
-    l.setLevel(logging.CRITICAL)
+    l.setLevel(logging.ERROR)
     return l
 
 logger = __setDefaultLogger()
-logLevelString = "CRITICAL"
+logLevelString = "ERROR"
 
 def redirectLoggerStreamHandlers(oldStream, newStream):
     """Redirect the stream of a stream handler to a different stream
@@ -79,17 +79,17 @@ def addLoggingFileHandler(fileName, rotatingLogging=False):
 
 def setLogLevel(logLevel):
     logLevel = logLevel.upper()
-    assert logLevel in [ "OFF", "CRITICAL", "INFO", "DEBUG" ] #Log level must be one of these strings.
+    if logLevel == "OFF":
+        logLevel = "CRITICAL"
+    elif logLevel == "WARN":
+        logLevel = "WARNING"
+    # Note that getLevelName works in both directions, numeric to textual and textual to numeric
+    numericLevel = logging.getLevelName(logLevel)
+    if not isinstance(numericLevel, int):
+        raise Exception("invalid log level string \"{}\"".format(logLevel))
     global logLevelString
     logLevelString = logLevel
-    if logLevel == "OFF":
-        logger.setLevel(logging.FATAL)
-    elif logLevel == "INFO":
-        logger.setLevel(logging.INFO)
-    elif logLevel == "DEBUG":
-        logger.setLevel(logging.DEBUG)
-    elif logLevel == "CRITICAL":
-        logger.setLevel(logging.CRITICAL)
+    logger.setLevel(numericLevel)
 
 def logFile(fileName, printFunction=logger.info):
     """Writes out a formatted version of the given log file
@@ -132,17 +132,17 @@ def _addLoggingOptions(addOptionFn):
     # FOR EXAMPLE, YOU MAY NOT USE default=%default OR default=%(default)s
     ##################################################
     addOptionFn("--logOff", dest="logOff", action="store_true", default=False,
-                     help="Turn off logging. (default is CRITICAL)")
+                     help="Turn off logging. (default is ERROR)")
     addOptionFn(
         "--logInfo", dest="logInfo", action="store_true", default=False,
-        help="Turn on logging at INFO level. (default is CRITICAL)")
+        help="Turn on logging at INFO level. (default is ERROR)")
     addOptionFn(
         "--logDebug", dest="logDebug", action="store_true", default=False,
-        help="Turn on logging at DEBUG level. (default is CRITICAL)")
+        help="Turn on logging at DEBUG level. (default is ERROR)")
     addOptionFn(
-        "--logLevel", dest="logLevel", default='CRITICAL',
-        help=("Log at level (may be either OFF/INFO/DEBUG/CRITICAL). "
-              "(default is CRITICAL)"))
+        "--logLevel", dest="logLevel", default='ERROR',
+        help=("Log at given level (may be either OFF (or CRITICAL), ERROR, WARN (or WARNING), INFO or DEBUG). "
+              "(default is ERROR)"))
     addOptionFn("--logFile", dest="logFile", help="File to log in")
     addOptionFn(
         "--rotatingLogging", dest="logRotating", action="store_true",
@@ -154,7 +154,7 @@ def setLoggingFromOptions(options):
     """
     #We can now set up the logging info.
     if options.logLevel is not None:
-        setLogLevel(options.logLevel) #Use log level, unless flags are set..
+        setLogLevel(options.logLevel)  # Use log level, unless flags are set..
 
     if options.logOff:
         setLogLevel("OFF")

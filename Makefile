@@ -23,7 +23,7 @@ externalToolsP.clean :
 	cd externalTools && ${MAKE} clean
 
 test : all
-	PYTHONPATH=src:. PATH=$$(pwd)/bin:$$PATH ${PYTHON} allTests.py --testLength=SHORT --logLevel=CRITICAL
+	PYTHONPATH=src:. PATH=$$(pwd)/bin:$$PATH ${PYTHON} allTests.py --testLength=SHORT --logLevel=WARN
 
 ${binPath}/sonLib_daemonize.py : sonLib_daemonize.py cP
 	cp sonLib_daemonize.py ${binPath}/sonLib_daemonize.py
