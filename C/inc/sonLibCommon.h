@@ -45,7 +45,10 @@ void *st_calloc(int64_t elementNumber, size_t elementSize);
 
 enum stLogLevel {
     off,
-    critical,
+    critical = off,
+    error,
+    warning,
+    warn = warning,
     info,
     debug
 };

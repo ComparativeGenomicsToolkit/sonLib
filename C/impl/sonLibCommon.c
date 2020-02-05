@@ -72,15 +72,14 @@ void st_setLogLevelFromString(const char *string) {
             LOG_LEVEL = off;
         } else if (strcmp(string2, "critical") == 0) {
             LOG_LEVEL = critical;
+        } else if (strcmp(string2, "warning") == 0) {
+            LOG_LEVEL = warning;
         } else if (strcmp(string2, "info") == 0) {
             LOG_LEVEL = info;
-            st_logInfo("Set log level to INFO\n");
-        } else {
-            if (strcmp(string2, "debug") != 0) {
-                st_errAbort("Unrecognised logging string %s", string);
-            }
+        } else if (strcmp(string2, "debug") == 0) {
             LOG_LEVEL = debug;
-            st_logInfo("Set log level to DEBUG\n");
+        } else {
+            st_errAbort("Unrecognised logging string %s", string);
         }
         free(string2);
     }
