@@ -21,15 +21,24 @@ from sonLib.bioio import parseSuiteTestOptions
 from sonLib.bioio import getLogLevelString
 from subprocess import check_call, Popen
 
-def needs(program):
+def needsProgram(program):
     """Decorator: Run this test only if "program" is available."""
     def wrap(fn):
-        print(fn)
-        print(program)
         try:
             check_call([program, "--version"])
         except:
-            return unittest.skip(program + ' is missing')(fn)
+            return unittest.skip(program + ' command is missing')(fn)
+        else:
+            return fn
+    return wrap
+
+def needsPackage(package):
+    """Decorator: Run this test only if "pkg-config --exists package" says OK!"""
+    def wrap(fn):
+        try:
+            check_call(["pkg-config", "--exists", package])
+        except:
+            return unittest.skip(package + ' pkg-config package is missing')(fn)
         else:
             return fn
     return wrap
@@ -39,7 +48,7 @@ class TestCase(unittest.TestCase):
         """Run most of the sonLib CuTests, fail if any of them fail."""
         system("sonLibTests %s" % getLogLevelString())
 
-    @needs('ktserver')
+    @needsProgram('ktserver')
     def testSonLibKTTests(self):
         """Run the sonLib KyotoTycoon interface tests."""
         ktserver = Popen(["ktserver", "-le"])
@@ -50,7 +59,7 @@ class TestCase(unittest.TestCase):
         finally:
             ktserver.kill()
 
-    @needs('redis-server')
+    @needsPackage('hiredis')
     def testSonLibRedisTests(self):
         """Run the sonLib Redis interface tests."""
         redis = Popen(["redis-server"])
