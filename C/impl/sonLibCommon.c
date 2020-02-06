@@ -72,6 +72,8 @@ void st_setLogLevelFromString(const char *string) {
             LOG_LEVEL = off;
         } else if (strcmp(string2, "critical") == 0) {
             LOG_LEVEL = critical;
+        } else if (strcmp(string2, "error") == 0) {
+            LOG_LEVEL = error;
         } else if (strcmp(string2, "warning") == 0) {
             LOG_LEVEL = warning;
         } else if (strcmp(string2, "info") == 0) {
