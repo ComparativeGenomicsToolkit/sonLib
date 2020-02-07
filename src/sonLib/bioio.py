@@ -391,6 +391,13 @@ class TestStatus:
         else:
             return testItem
 
+    @staticmethod
+    def travisOmitTime(testItem):
+        if os.environ.get("TRAVIS") is not None:
+            return unittest.skip("Test omitted from Travis to keep it under the time limit")(testItem)
+        else:
+            return testItem
+
 if "SONLIB_TEST_LENGTH" in os.environ:
     TestStatus.setTestLength(parseTestLength(os.environ["SONLIB_TEST_LENGTH"]))
 
