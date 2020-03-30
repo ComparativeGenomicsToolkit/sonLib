@@ -1,18 +1,16 @@
 include ../../include.mk
-binPath = ../../bin
-libPath = ../../lib
+BINDIR = ../../bin
+LIBDIR = ../../lib
 
-all : ${libPath}/cuTest.a
+all : ${LIBDIR}/cuTest.a
 
 clean : 
-#Removing test binaries
-	rm -f ${libPath}/cuTest.a ${libPath}/CuTest.h
+	rm -f ${LIBDIR}/cuTest.a ${LIBDIR}/CuTest.h *.o
 
-${libPath}/cuTest.a : CuTest.c CuTest.h
+${LIBDIR}/cuTest.a : CuTest.c CuTest.h
 	@mkdir -p $(dir $@)
-	${cxx} ${cflags} -c CuTest.c
-	ar rc cuTest.a *.o
-	ranlib cuTest.a
-	rm -f *.o
-	mv cuTest.a ${libPath}/
-	cp CuTest.h ${libPath}/
+	${CC} ${CFLAGS} -c CuTest.c
+	${AR} rc cuTest.a *.o
+	${RANLIB} cuTest.a
+	mv cuTest.a ${LIBDIR}/
+	cp CuTest.h ${LIBDIR}/

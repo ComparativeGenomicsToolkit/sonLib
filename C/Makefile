@@ -1,6 +1,6 @@
+rootPath = ..
+
 include ../include.mk
-binPath = ../bin
-libPath = ../lib
 
 libSources = impl/*.c
 cppSources = impl/*.cpp
@@ -10,55 +10,49 @@ libTests = tests/sonLib*.c tests/st*
 quickTreeObjects = ../externalTools/quicktree_1.1/obj/buildtree.o ../externalTools/quicktree_1.1/obj/cluster.o ../externalTools/quicktree_1.1/obj/distancemat.o ../externalTools/quicktree_1.1/obj/options.o ../externalTools/quicktree_1.1/obj/sequence.o ../externalTools/quicktree_1.1/obj/tree.o ../externalTools/quicktree_1.1/obj/util.o
 quickTreeLibPath = ../externalTools/quicktree_1.1/include/
 
-testProgs = ${binPath}/sonLibTests ${binPath}/sonLib_kvDatabaseTest ${binPath}/sonLib_cigarTest ${binPath}/sonLib_fastaCTest
+testProgs = ${BINDIR}/sonLibTests ${BINDIR}/sonLib_kvDatabaseTest ${BINDIR}/sonLib_cigarTest ${BINDIR}/sonLib_fastaCTest
 
 dbInclFlags = ${tokyoCabinetIncl} ${kyotoTycoonIncl} ${tokyoTyrantIncl} ${mysqlIncl} ${pgsqlIncl} -I${quickTreeLibPath} ${hiRedisIncl}
-cflags += ${dbInclFlags}
-cppflags += ${dbInclFlags}
 
-all : ${libPath}/sonLib.a ${testProgs}
+CPPFLAGS += ${dbInclFlags} -I ../externalTools/cutest
+LDLIBS = ${LIBDIR}/sonLib.a ${dblibs} ${LIBS}
+
+all : ${LIBDIR}/sonLib.a ${testProgs}
 
 clean : 
-	rm -rf  ${binPath} ${libPath}
+	rm -rf  ${BINDIR} ${LIBDIR} *.o
 
-${binPath}/sonLibTests : ${libTests} ${libInternalHeaders} ${libPath}/sonLib.a ${libPath}/cuTest.a tests/allTests.c
+${BINDIR}/sonLibTests : ${libTests} ${libInternalHeaders} ${LIBDIR}/sonLib.a ${LIBDIR}/cuTest.a tests/allTests.c
 	@mkdir -p $(dir $@)
-	${cxx} ${cflags} -I inc -I ${libPath} -o $@.tmp tests/allTests.c ${libTests} ${libPath}/sonLib.a ${libPath}/cuTest.a ${dblibs} ${mysqlLibs} -lm -lstdc++ -lpthread
-	mv $@.tmp $@
+	${CC} ${CPPFLAGS} ${CFLAGS} ${LDFLAGS} -o $@ tests/allTests.c ${libTests} ${LIBDIR}/sonLib.a ${LIBDIR}/cuTest.a ${dblibs} ${mysqlLibs} ${LDLIBS} -lm -lstdc++ -lpthread
 
-${binPath}/sonLib_kvDatabaseTest : ${libTests} ${libInternalHeaders} ${libPath}/sonLib.a ${libPath}/cuTest.a tests/kvDatabaseTest.c tests/kvDatabaseTestCommon.c
+${BINDIR}/sonLib_kvDatabaseTest : ${libTests} ${libInternalHeaders} ${LIBDIR}/sonLib.a ${LIBDIR}/cuTest.a tests/kvDatabaseTest.c tests/kvDatabaseTestCommon.c
 	@mkdir -p $(dir $@)
-	${cxx} ${cflags} -I inc -I ${libPath} -I tests -o $@.tmp tests/kvDatabaseTest.c tests/kvDatabaseTestCommon.c ${libPath}/sonLib.a ${libPath}/cuTest.a ${dblibs} ${mysqlLibs} -lm
-	mv $@.tmp $@
+	${CC} ${CPPFLAGS} ${CFLAGS} ${LDFLAGS} -I tests -o $@ tests/kvDatabaseTest.c tests/kvDatabaseTestCommon.c ${LIBDIR}/sonLib.a ${LIBDIR}/cuTest.a ${dblibs} ${mysqlLibs} ${LDLIBS} -lm
 
-${binPath}/sonLib_cigarTest : tests/cigarsTest.c ${libTests} ${libInternalHeaders} ${libPath}/sonLib.a 
+${BINDIR}/sonLib_cigarTest : tests/cigarsTest.c ${libTests} ${libInternalHeaders} ${LIBDIR}/sonLib.a 
 	@mkdir -p $(dir $@)
-	${cxx} ${cflags} -I inc -I ${libPath} -o $@.tmp tests/cigarsTest.c ${libPath}/sonLib.a -lm
-	mv $@.tmp $@
+	${CC} ${CPPFLAGS} ${CFLAGS} ${LDFLAGS} -o $@ tests/cigarsTest.c ${LDLIBS}
 
-${binPath}/sonLib_fastaCTest : tests/fastaCTest.c ${libTests} ${libInternalHeaders} ${libPath}/sonLib.a
+${BINDIR}/sonLib_fastaCTest : tests/fastaCTest.c ${libTests} ${libInternalHeaders} ${LIBDIR}/sonLib.a
 	@mkdir -p $(dir $@)
-	${cxx} ${cflags} -I inc -I ${libPath} -o $@.tmp tests/fastaCTest.c ${libPath}/sonLib.a -lm
-	mv $@.tmp $@
+	${CC} ${CPPFLAGS} ${CFLAGS} ${LDFLAGS} -o $@ tests/fastaCTest.c ${LDLIBS}
 
-${binPath}/kt_connect_test : tests/kt_connect_test.cpp ${libTests} ${libInternalHeaders} ${libPath}/sonLib.a
+${BINDIR}/kt_connect_test : tests/kt_connect_test.cpp ${libTests} ${libInternalHeaders} ${LIBDIR}/sonLib.a
 	@mkdir -p $(dir $@)
-	${cpp} ${cppflags} -I inc -I ${libPath}/ -o $@.tmp tests/kt_connect_test.cpp ${libPath}/sonLib.a ${dblibs} -lm
-	mv $@.tmp $@
+	${CXX} ${CXXFLAGS} ${CPPFLAGS} -o $@ tests/kt_connect_test.cpp ${LIBDIR}/sonLib.a ${dblibs} ${LDLIBS} -lm
 
-${libPath}/%.h: inc/%.h
+${LIBDIR}/%.h: inc/%.h
 	@mkdir -p $(dir $@)
-	cp $< $@.tmp
-	mv $@.tmp $@
+	cp $< $@
 
-${libPath}/sonLib.a : ${libSources} ${cppSources} $(foreach l, ${libHeaders}, ${libPath}/$(notdir $l)) ${libInternalHeaders}
+${LIBDIR}/sonLib.a : ${libSources} ${cppSources} $(foreach l, ${libHeaders}, ${LIBDIR}/$(notdir $l)) ${libInternalHeaders}
 	@mkdir -p $(dir $@)
-	${cxx} ${cflags} -I inc -I ${libPath}/  -c ${libSources}
-	${cpp} ${cppflags} -I inc -I ${libPath}/ -c ${cppSources}
-	ar rc sonLib.a *.o ${quickTreeObjects}
-	ranlib sonLib.a 
-	rm *.o
-	mv sonLib.a ${libPath}/
+	${CC} ${CPPFLAGS} ${CFLAGS} -c ${libSources}
+	${CXX} ${CXXFLAGS} ${CPPFLAGS} -c ${cppSources}
+	${AR} rc sonLib.a *.o ${quickTreeObjects}
+	${RANLIB} sonLib.a 
+	mv sonLib.a ${LIBDIR}/
 
 test:
 	${PYTHON} allTests.py --testLength=SHORT --logLevel CRITICAL

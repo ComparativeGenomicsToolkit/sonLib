@@ -1,7 +1,7 @@
 include ../include.mk
 .PHONY: all clean cutestM cutestM.clean quicktreeM.clean
 
-libPath = ../lib
+LIBDIR = ../lib
 
 all : cutestM quicktreeM
 
@@ -14,7 +14,7 @@ cutestM.clean :
 	cd cutest && ${MAKE} clean
 
 quicktreeM :
-	cd quicktree_1.1 && ${MAKE} all CC="${cxx}"
+	cd quicktree_1.1 && ${MAKE} all CC="${CC}"
 
 quicktreeM.clean :
 	cd quicktree_1.1 && ${MAKE} clean

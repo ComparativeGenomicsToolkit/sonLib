@@ -1,14 +1,13 @@
 include include.mk
-binPath = ./bin
+BINDIR = ./bin
 
 .PHONY: all clean cP cP.clean externalToolsP.clean test
 
-all : cP ${binPath}/sonLib_daemonize.py
+all : cP ${BINDIR}/sonLib_daemonize.py
 
 clean : cP.clean externalToolsP.clean
-	rm -f ${binPath}/sonLib_daemonize.py
+	rm -f ${BINDIR}/sonLib_daemonize.py
 	rm -rf ${libFiles} ${libFiles:%=%c}
-
 
 cP: externalToolsP
 	cd C && ${MAKE} all
@@ -25,6 +24,6 @@ externalToolsP.clean :
 test : all
 	PYTHONPATH=src:. PATH=$$(pwd)/bin:$$PATH ${PYTHON} allTests.py --testLength=SHORT --logLevel=WARN
 
-${binPath}/sonLib_daemonize.py : sonLib_daemonize.py cP
-	cp sonLib_daemonize.py ${binPath}/sonLib_daemonize.py
-	chmod +x ${binPath}/sonLib_daemonize.py
+${BINDIR}/sonLib_daemonize.py : sonLib_daemonize.py cP
+	cp sonLib_daemonize.py ${BINDIR}/sonLib_daemonize.py
+	chmod +x ${BINDIR}/sonLib_daemonize.py

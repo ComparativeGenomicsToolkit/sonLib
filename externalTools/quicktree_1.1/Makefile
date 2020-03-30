@@ -13,16 +13,16 @@ COMMON = $(OBJ)/align.o \
 
 QUICKTREEOBJ = $(COMMON) $(OBJ)/quicktree.o $(OBJ)/buildtree.o $(OBJ)/tree.o
 
-CFLAGS  = -c -I$(INC) -O3 -Wall
+CFLAGS += -c -I$(INC) -O3 -Wall
 
-LFLAGS = -g 
+LDFLAGS = -g 
 
 all: $(BIN)/quicktree
 
 quicktree : $(BIN)/quicktree
 
 $(BIN)/quicktree : $(QUICKTREEOBJ)
-	$(CC) $(LFLAGS) -o $@ $(QUICKTREEOBJ) -lm
+	$(CC) $(LDFLAGS) -o $@ $(QUICKTREEOBJ) -lm
 
 $(OBJ)/quicktree.o : $(SRC)/quicktree.c 
 	$(CC) $(CFLAGS) -o $(OBJ)/quicktree.o $(SRC)/quicktree.c

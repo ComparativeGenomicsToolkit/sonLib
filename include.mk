@@ -4,6 +4,17 @@ MACH = $(shell uname -m)
 SYS =  $(shell uname -s)
 PYTHON = python3
 
+BINDIR = ${rootPath}/../sonLib/bin
+LIBDIR = ${rootPath}/../sonLib/lib
+
+##
+# C compiler flags
+CFLAGS += -std=c99
+
+##
+# CGL `standard' inc/impl
+CPPFLAGS += -Iinc -Iimpl
+
 ##
 # For GCC, the C++ 11 aplication binary interface must match the version
 # that HDF5 uses.  Change the ABI version can address errors about undefined functions that vary
@@ -26,88 +37,61 @@ ifeq ($(shell hostname -d), gi.ucsc.edu)
 endif
 endif
 endif
-cppflags += ${CXX_ABI_DEF}
+CXXFLAGS += ${CXX_ABI_DEF}
 
 
-#C compiler. FIXME: for some reason the cxx variable is used, which
-#typically means C++ compiler.
-ifeq (${CC},cc)
-  ifeq (${SYS},FreeBSD)
-    # default FreeBSD gcc (4.2.1) has warning bug
-    #cxx = gcc46 -std=c99 -Wno-unused-but-set-variable
-    cxx = gcc34 -std=c99 -Wno-unused-but-set-variable
-  else ifeq ($(SYS),Darwin) #This is to deal with the Mavericks replacing gcc with clang fully
-	cxx = clang -std=c99 
-  else
-    cxx = gcc -std=c99
-  endif
-else
-  cxx = ${CC} -std=c99
-endif
-
-# C++ compiler. FIXME: for some reason the cpp variable is used, which
-# typically refers to the C preprocessor.
+# C++ compiler.
 ifndef CXX
-  ifeq (${SYS},FreeBSD)
-    # default FreeBSD gcc (4.2.1) has warning bug
-    cpp = g++
-  else ifeq ($(SYS),Darwin) #This is to deal with the Mavericks replacing gcc with clang fully
-    cpp = clang++
+  ifeq ($(SYS),Darwin) #This is to deal with the Mavericks replacing gcc with clang fully
+    CXX = clang++
   else
-    cpp = g++
+    CXX = g++
   endif
-else
-  cpp = ${CXX}
 endif
-
-# -Wno-unused-result
 
 # Compiler flags.
-# DO NOT put static library -l options here. Those must be specified *after*
-# linker input files. See <http://stackoverflow.com/a/8266512/402891>.
 
 #Release compiler flags
-cflags_opt = -O3 -g -Wall --pedantic -funroll-loops -DNDEBUG 
-#-fopenmp
-cppflags_opt = -O3 -g -Wall -funroll-loops -DNDEBUG
+CFLAGS_opt = -O3 -g -Wall --pedantic -funroll-loops -DNDEBUG 
+CXXFLAGS_opt = -O3 -g -Wall -funroll-loops -DNDEBUG
 
 #Debug flags (slow)
-cflags_dbg = -Wall -O0 -Werror --pedantic -g -fno-inline -UNDEBUG -Wno-error=unused-result
-cppflags_dbg = -Wall -g -O0 -fno-inline -UNDEBUG
+CFLAGS_dbg = -Wall -O0 -Werror --pedantic -g -fno-inline -UNDEBUG -Wno-error=unused-result
+CXXFLAGS_dbg = -Wall -g -O0 -fno-inline -UNDEBUG
 
 #Ultra Debug flags (really slow, checks for memory issues)
-cflags_ultraDbg = -Wall -Werror --pedantic -g -O1 -fno-inline -fno-omit-frame-pointer -fsanitize=address
-cppflags_ultraDbg = -g -O1 -fno-inline -fno-omit-frame-pointer -fsanitize=address
+CFLAGS_ultraDbg = -Wall -Werror --pedantic -g -O1 -fno-inline -fno-omit-frame-pointer -fsanitize=address
+CXXFLAGS_ultraDbg = -g -O1 -fno-inline -fno-omit-frame-pointer -fsanitize=address
 
 #Profile flags
-cflags_prof = -Wall -Werror --pedantic -pg -O3 -g -Wno-error=unused-result
-cppflags_prof = -pg -O3 -g -Wall -funroll-loops -DNDEBUG
+CFLAGS_prof = -Wall -Werror --pedantic -pg -O3 -g -Wno-error=unused-result
+CXXFLAGS_prof = -pg -O3 -g -Wall -funroll-loops -DNDEBUG
 
 #Flags to use
 ifneq (${CGL_PROF},)
-  cppflags += ${cppflags_prof}
-  cflags += ${cflags_prof}
+  CXXFLAGS += ${CXXFLAGS_prof}
+  CFLAGS += ${CFLAGS_prof}
 else ifneq (${CGL_DEBUG},)
   ifeq (${CGL_DEBUG},ultra)
-    cppflags += ${cppflags_ultraDbg}
-    cflags += ${cflags_ultraDbg}
+    CXXFLAGS += ${CXXFLAGS_ultraDbg}
+    CFLAGS += ${CFLAGS_ultraDbg}
   else
-    cppflags += ${cppflags_dbg}
-    cflags += ${cflags_dbg}
+    CXXFLAGS += ${CXXFLAGS_dbg}
+    CFLAGS += ${CFLAGS_dbg}
   endif
 else
-  cppflags += ${cppflags_opt}
-  cflags += ${cflags_opt}
+  CXXFLAGS += ${CXXFLAGS_opt}
+  CFLAGS += ${CFLAGS_opt}
 endif
+
+# other commands
+RANLIB ?= ranlib
+
+ifdef ENABLE_TOKYO_CABINET
 # location of Tokyo cabinet
 ifndef tokyoCabinetLib
 HAVE_TOKYO_CABINET = $(shell pkg-config --exists tokyocabinet; echo $$?)
-ifneq ($(wildcard /hive/groups/recon/local/include/tcbdb.h),)
-   # hgwdev hive install
-   tcPrefix = /hive/groups/recon/local
-   tokyoCabinetIncl = -I${tcPrefix}/include -DHAVE_TOKYO_CABINET=1
-   tokyoCabinetLib = -L${tcPrefix}/lib -Wl,-rpath,${tcPrefix}/lib -ltokyocabinet -lz -lbz2 -lpthread -lm
-else ifneq ($(wildcard /opt/local/include/tcbdb.h),)
+ifneq ($(wildcard /opt/local/include/tcbdb.h),)
    # OS/X with TC installed from MacPorts
    tcPrefix = /opt/local
    tokyoCabinetIncl = -I${tcPrefix}/include -DHAVE_TOKYO_CABINET=1
@@ -128,16 +112,12 @@ else ifeq (${HAVE_TOKYO_CABINET},0)
    tokyoCabinetLib = $(shell pkg-config --libs-only-L tokyocabinet) -Wl,-rpath,$(shell pkg-config --variable=libdir tokyocabinet) $(shell pkg-config --libs-only-l --static tokyocabinet)
 endif
 endif
+endif
 
 # location of Kyoto Tycoon
 ifndef kyotoTycoonLib
 HAVE_KYOTO_TYCOON = $(shell pkg-config --exists kyototycoon; echo $$?)
-ifneq ($(wildcard /hive/groups/recon/local/include/ktcommon.h),)
-   # hgwdev hive install
-   ttPrefix = /hive/groups/recon/local
-   kyotoTycoonIncl = -I${ttPrefix}/include -DHAVE_KYOTO_TYCOON=1
-   kyotoTycoonLib = -L${ttPrefix}/lib -Wl,-rpath,${ttPrefix}/lib -lkyototycoon -lkyotocabinet -lz -lbz2 -lpthread -lm -lstdc++
-else ifneq ($(wildcard /opt/local/include/ktcommon.h),)
+ifneq ($(wildcard /opt/local/include/ktcommon.h),)
    # OS/X with TC installed from MacPorts
    ttPrefix = /opt/local
    kyotoTycoonIncl = -I${ttPrefix}/include -DHAVE_KYOTO_TYCOON=1 
