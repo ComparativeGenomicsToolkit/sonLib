@@ -4,8 +4,8 @@ MACH = $(shell uname -m)
 SYS =  $(shell uname -s)
 PYTHON = python3
 
-BINDIR = ${rootPath}/../sonLib/bin
-LIBDIR = ${rootPath}/../sonLib/lib
+BINDIR ?= ${rootPath}/../sonLib/bin
+LIBDIR ?= ${rootPath}/../sonLib/lib
 
 ##
 # C compiler flags
