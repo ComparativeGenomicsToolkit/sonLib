@@ -87,7 +87,6 @@ endif
 # other commands
 RANLIB ?= ranlib
 
-ifdef ENABLE_TOKYO_CABINET
 # location of Tokyo cabinet
 ifndef tokyoCabinetLib
 HAVE_TOKYO_CABINET = $(shell pkg-config --exists tokyocabinet; echo $$?)
@@ -110,7 +109,6 @@ else ifeq (${HAVE_TOKYO_CABINET},0)
    # Install registered with pkg-config
    tokyoCabinetIncl = $(shell pkg-config --cflags tokyocabinet) -DHAVE_TOKYO_CABINET=1
    tokyoCabinetLib = $(shell pkg-config --libs-only-L tokyocabinet) -Wl,-rpath,$(shell pkg-config --variable=libdir tokyocabinet) $(shell pkg-config --libs-only-l --static tokyocabinet)
-endif
 endif
 endif
 
