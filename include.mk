@@ -9,7 +9,10 @@ LIBDIR ?= ${rootPath}/../sonLib/lib
 
 ##
 # C compiler flags
-CFLAGS += -std=c99
+#
+# - enable PIC as some newer GCC versions are configured to link PIE by default,
+#   which will not link with non-PIC objcts
+CFLAGS += -std=c99 -fPIC
 
 ##
 # CGL `standard' inc/impl
