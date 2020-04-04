@@ -142,6 +142,7 @@ endif
 endif
 
 # location of hiredis
+ifdef REDIS_DISABLED_FOR_NOW
 ifndef hiRedisLib
   HAVE_REDIS = $(shell pkg-config --exists hiredis; echo $$?)
   ifeq (${HAVE_REDIS},0)
@@ -154,6 +155,7 @@ ifndef hiRedisLib
       hiRedisIncl = ${incs} -DHAVE_REDIS=1
     endif
   endif
+endif
 endif
 
 dblibs = ${tokyoCabinetLib} ${kyotoTycoonLib} ${hiRedisLib} -lz -lm
