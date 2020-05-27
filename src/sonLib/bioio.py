@@ -4,6 +4,7 @@
 #
 #Released under the MIT license, see LICENSE.txt
 
+
 import sys
 import os
 import re
@@ -37,17 +38,24 @@ DEFAULT_DISTANCE = 0.001
 
 loggingFormatter = logging.Formatter('%(asctime)s %(levelname)s %(lineno)s %(message)s')
 
-def __setDefaultLogger():
-    l = logging.getLogger()
+def __setSingleLogger():
+    """
+    Set up a logger as sonLib.bioio.logger, without interfering with later
+    calls to basicConfig on the root logger from library users who don't use
+    our logging system.
+    """
+    l = logging.getLogger(__name__)
     for handler in l.handlers: #Do not add a duplicate handler unless needed
         if handler.stream == sys.stderr:
             return l
     handler = logging.StreamHandler(sys.stderr)
+    # Make sure to apply our desired formatter.
+    handler.setFormatter(loggingFormatter)
     l.addHandler(handler)
     l.setLevel(logging.ERROR)
     return l
 
-logger = __setDefaultLogger()
+logger = __setSingleLogger()
 logLevelString = "ERROR"
 
 def redirectLoggerStreamHandlers(oldStream, newStream):
