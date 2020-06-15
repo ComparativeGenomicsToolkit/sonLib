@@ -136,14 +136,43 @@ void test_stList_removeFirst(CuTest *testCase) {
     teardown();
 }
 
+void test_stList_removeInterval(CuTest *testCase) {
+    // Tests all possible remove interval ops on the list
+    for(int64_t i=0; i<stringNumber; i++) {
+        for(int64_t j=i; j<stringNumber; j++) {
+            setup();
+            stList_removeInterval(list, i, j-i);
+            CuAssertTrue(testCase, stList_length(list) == stringNumber - (j-i));
+            for(int64_t k=0; k<i; k++) {
+                CuAssertTrue(testCase, stList_get(list, k) == strings[k]);
+            }
+            for(int64_t k=j; k<stringNumber; k++) {
+                CuAssertTrue(testCase, stList_get(list, k-(j-i)) == strings[k]);
+            }
+            teardown();
+        }
+    }
+}
+
 void test_stList_contains(CuTest *testCase) {
     setup();
     int64_t i;
-    for(i=0; i<stringNumber; i++) {
+    for (i = 0; i < stringNumber; i++) {
         CuAssertTrue(testCase, stList_contains(list, strings[i]));
     }
     CuAssertTrue(testCase, !stList_contains(list, "something"));
     CuAssertTrue(testCase, !stList_contains(list, NULL));
+    teardown();
+}
+
+void test_stList_find(CuTest *testCase) {
+    setup();
+    int64_t i;
+    for (i = 0; i < stringNumber; i++) {
+        CuAssertTrue(testCase, stList_find(list, strings[i]) == i);
+    }
+    CuAssertTrue(testCase, stList_find(list, "something") == -1);
+    CuAssertTrue(testCase, stList_find(list, NULL) == -1);
     teardown();
 }
 
@@ -152,7 +181,7 @@ void test_stList_copy(CuTest *testCase) {
     stList *list2 = stList_copy(list, NULL);
     CuAssertTrue(testCase, stList_length(list) == stList_length(list2));
     int64_t i;
-    for(i=0; i<stringNumber; i++) {
+    for (i = 0; i < stringNumber; i++) {
         CuAssertTrue(testCase, stList_get(list2, i) == strings[i]);
     }
     stList_destruct(list2);
@@ -278,7 +307,9 @@ CuSuite* sonLib_stListTestSuite(void) {
     SUITE_ADD_TEST(suite, test_stList_pop);
     SUITE_ADD_TEST(suite, test_stList_remove);
     SUITE_ADD_TEST(suite, test_stList_removeFirst);
+    SUITE_ADD_TEST(suite, test_stList_removeInterval);
     SUITE_ADD_TEST(suite, test_stList_contains);
+    SUITE_ADD_TEST(suite, test_stList_find);
     SUITE_ADD_TEST(suite, test_stList_copy);
     SUITE_ADD_TEST(suite, test_stList_reverse);
     SUITE_ADD_TEST(suite, test_stList_iterator);

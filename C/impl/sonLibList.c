@@ -12,6 +12,7 @@
  */
 
 #include "sonLibGlobalsInternal.h"
+#include "sort_r.h"
 
 #define MINIMUM_ARRAY_EXPAND_SIZE 5 //The minimum amount to expand the array backing a list by when it is rescaled.
 
@@ -130,6 +131,39 @@ void *stList_remove(stList *list, int64_t index) {
     return o;
 }
 
+void stList_removeInterval(stList *list, int64_t start, int64_t length) {
+    assert(start >= 0);
+    assert(start + length <= stList_length(list));
+    if(length > 0) {
+        int64_t i = start;
+        int64_t j = start + length;
+        while (i < start + length || j < stList_length(list)) {
+            // free removed elements
+            if (list->destructElement != NULL && i < start+length) {
+                list->destructElement(stList_get(list, i));
+            }
+            // either move j to i (interval removed from start or middle of list), or clear i (interval at end of list)
+            if (j < stList_length(list)) {
+                stList_set(list, i, stList_get(list, j));
+            } else {
+                stList_set(list, i, NULL);
+            }
+            ++i; ++j;
+        }
+
+
+//        int64_t i = start;
+//        for (int64_t j = start+length; j < stList_length(list); j++) {
+//            if (list->destructElement != NULL && i < start+length) {
+//                void* element = stList_get(list, i);
+//                list->destructElement(element);
+//            }
+//            stList_set(list, i++, stList_get(list, j));
+//        }
+        list->length -= length;
+    }
+}
+
 void stList_removeItem(stList *list, void *item)  {
     int64_t i;
     for(i=0; i<stList_length(list); i++) {
@@ -144,14 +178,18 @@ void *stList_removeFirst(stList *list) {
     return stList_remove(list, 0);
 }
 
-int64_t stList_contains(stList *list, void *item) {
+int64_t stList_find(stList *list, void *item) {
     int64_t i;
-    for(i=0; i<stList_length(list); i++) {
-        if(stList_get(list, i) == item) {
-            return 1;
+    for (i = 0; i < stList_length(list); i++) {
+        if (stList_get(list, i) == item) {
+            return i;
         }
     }
-    return 0;
+    return -1;
+}
+
+int64_t stList_contains(stList *list, void *item) {
+    return stList_find(list, item) != -1;
 }
 
 stList *stList_copy(stList *list, void (*destructItem)(void *)) {
@@ -202,6 +240,41 @@ stListIterator *stList_copyIterator(stListIterator *iterator) {
     return it;
 }
 
+/*
+  Here lies Trevor's dignity
+             .
+            -|-
+             |
+         .-'~~~`-.
+       .'         `.
+       |  R  I  P  |
+       |           |
+       |           |
+     \\|           |//
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ */
+//#ifdef _OPENMP
+int st_list_sortP(const void *a, const void *b, void *fn) {
+    return ((int (*)(const void *, const void *))fn)(*((char **)a), *((char **)b));
+}
+
+void stList_sort(stList *list, int cmpFn(const void *a, const void *b)) {
+    sort_r(list->list, stList_length(list), sizeof(void *), st_list_sortP, (void *)cmpFn);
+}
+
+int st_list_sort2P(const void *a, const void *b, void *extra) {
+    // I know the following cast looks gross..
+    int (*cmpFn)(const void *, const void *, void *) = (int (*)(const void *, const void *, void *))(((void **)extra)[0]);
+    void *extraArg = ((void **)extra)[1];
+    return cmpFn(*((char **)a), *((char **)b), extraArg);
+}
+
+void stList_sort2(stList *list, int cmpFn(const void *a, const void *b, const void *extraArg), const void *extraArg) {
+    void *extra[2] = { (void *)cmpFn, (void *)extraArg };
+    sort_r(list->list, stList_length(list), sizeof(void *), st_list_sort2P, extra);
+}
+/*#else
+// for reference: https://stackoverflow.com/questions/39560773/different-declarations-of-qsort-r-on-mac-and-linux
 static int (*st_list_sort_cmpFn)(const void *a, const void *b);
 static int st_list_sortP(const void *a, const void *b) {
     return st_list_sort_cmpFn(*((char **)a), *((char **)b));
@@ -223,6 +296,7 @@ void stList_sort2(stList *list, int cmpFn(const void *a, const void *b, const vo
     st_list_sort2_cmpFn = cmpFn;
     qsort(list->list, stList_length(list), sizeof(void *), st_list_sort2P);
 }
+//#endif*/
 
 void stList_shuffle(stList *list) {
     for(int64_t i=0; i<stList_length(list); i++) {
