@@ -12,7 +12,7 @@
  */
 
 #include "sonLibGlobalsInternal.h"
-#include "sort_r.h"
+#include "safesort.h"
 
 #define MINIMUM_ARRAY_EXPAND_SIZE 5 //The minimum amount to expand the array backing a list by when it is rescaled.
 
@@ -259,7 +259,7 @@ int st_list_sortP(const void *a, const void *b, void *fn) {
 }
 
 void stList_sort(stList *list, int cmpFn(const void *a, const void *b)) {
-    sort_r(list->list, stList_length(list), sizeof(void *), st_list_sortP, (void *)cmpFn);
+    safesort(list->list, stList_length(list), sizeof(void *), st_list_sortP, (void *)cmpFn);
 }
 
 int st_list_sort2P(const void *a, const void *b, void *extra) {
@@ -271,7 +271,7 @@ int st_list_sort2P(const void *a, const void *b, void *extra) {
 
 void stList_sort2(stList *list, int cmpFn(const void *a, const void *b, const void *extraArg), const void *extraArg) {
     void *extra[2] = { (void *)cmpFn, (void *)extraArg };
-    sort_r(list->list, stList_length(list), sizeof(void *), st_list_sort2P, extra);
+    safesort(list->list, stList_length(list), sizeof(void *), st_list_sort2P, extra);
 }
 /*#else
 // for reference: https://stackoverflow.com/questions/39560773/different-declarations-of-qsort-r-on-mac-and-linux
