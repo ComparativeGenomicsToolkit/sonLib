@@ -144,7 +144,7 @@ void fastaWrite(char *sequence, char *header, FILE *file) {
 }
 
 char *addSeqToList(char *seq, int64_t *length, int64_t *maxLength, char *fastaName, void *destination,
-        void (*addSeq)(void *, const char *, const char *, int64_t)) {
+        void (*addSeq)(void *destination, const char *name, const char *seq, int64_t length)) {
     seq = arrayPrepareAppend(seq, maxLength, *length+1, sizeof(char));
     seq[*length] = '\0';
     addSeq(destination, fastaName, seq, *length);
@@ -152,8 +152,8 @@ char *addSeqToList(char *seq, int64_t *length, int64_t *maxLength, char *fastaNa
     return seq;
 }
 
-void fastaReadToFunction(FILE *fastaFile, void *destination, void (*addSeq)(void *, const char *, const char *, int64_t)) {
-    //reads in group of sequences INT_32o lists
+void fastaReadToFunction(FILE *fastaFile, void *destination, void (*addSeq)(void *destination, const char *name, const char *seq, int64_t length)) {
+    //reads in group of sequences into lists
     char j;
     int64_t k;
     char *seq = NULL;
