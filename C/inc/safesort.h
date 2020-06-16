@@ -3,6 +3,10 @@
  * 
  * Wrapper to create a thread-safe sort. Deals with the fact 
  * that qsort_r has different signature on OS/X and Linux
+ *
+ * WARNING: this should be include first, or at least before the
+ * include of stdlib.h, otherwise the qsort_r function will not be
+ * defined on Linux.
  */
 #ifndef SAFESORT_H
 #define SAFESORT_H
