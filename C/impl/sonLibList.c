@@ -240,12 +240,38 @@ stListIterator *stList_copyIterator(stListIterator *iterator) {
     return it;
 }
 
-void stList_sort(stList *list, int cmpFn(const void *a, const void *b)) {
-    qsort(list->list, stList_length(list), sizeof(void *), cmpFn);
+/* must warp function pointer in data, as ISO C doesn't allow conversions
+ * between void* and function pointers */
+struct sortFuncArgs {
+    int (*cmpFn)(const void *a, const void *b);
+};
+
+/* converts pointer to pointer into pointer to element */
+static int sortListCmpFn(const void *a, const void *b, void* sargs) {
+    return ((struct sortFuncArgs*)sargs)->cmpFn(*(char**)a, *(char**)b);
 }
 
-void stList_sort2(stList *list, int cmpFn(const void *a, const void *b, void *extraArg), void *extraArg) {
-    safesort(list->list, stList_length(list), sizeof(void *), cmpFn, extraArg);
+void stList_sort(stList *list, int (*cmpFn)(const void *a, const void *b)) {
+    struct sortFuncArgs sargs = {cmpFn};
+    safesort(list->list, stList_length(list), sizeof(void *), sortListCmpFn, &sargs);
+}
+
+/* must warp function pointer in data, as ISO C doesn't allow conversions
+ * between void* and function pointers */
+struct sort2FuncArgs {
+    int (*cmpFn)(const void *a, const void *b, void* args);
+    void *args;
+};
+
+/* converts pointer to pointer into pointer to element */
+static int sortList2CmpFn(const void *a, const void *b, void* args) {
+    struct sort2FuncArgs* sargs = (struct sort2FuncArgs*)args;
+    return sargs->cmpFn(*(char**)a, *(char**)b, sargs->args);
+}
+
+void stList_sort2(stList *list, int (*cmpFn)(const void *a, const void *b, void *extraArg), void *extraArg) {
+    struct sort2FuncArgs sargs = {cmpFn, extraArg};
+    safesort(list->list, stList_length(list), sizeof(void *), sortList2CmpFn, &sargs);
 }
 
 void stList_shuffle(stList *list) {

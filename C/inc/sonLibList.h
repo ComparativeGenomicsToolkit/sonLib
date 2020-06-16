@@ -154,13 +154,17 @@ stListIterator *stList_copyIterator(stListIterator *iterator);
 
 /*
  * Sorts the stList with the given cmpFn.
+ * NOTE: cmpFn takes pointers to elements, not pointer to pointers as with
+ * C sort.
  */
-void stList_sort(stList *list, int cmpFn(const void *a, const void *b));
+void stList_sort(stList *list, int (*cmpFn)(const void *a, const void *b));
 
 /*
  * Sorts the stList with the given cmpFn, passing the extra argument to the comparison function.
+ * NOTE: cmpFn takes pointers to elements, not pointer to pointers as with
+ * C sort.
  */
-void stList_sort2(stList *list, int cmpFn(const void *a, const void *b, void *extraArg), void *extraArg);
+void stList_sort2(stList *list, int (*cmpFn)(const void *a, const void *b, void *extraArg), void *extraArg);
 
 /*
  * Permutes the list, by iterating over each element and swapping it randomly with a new location.

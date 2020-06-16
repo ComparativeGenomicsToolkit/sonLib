@@ -394,17 +394,19 @@ bool stTree_equals(stTree *tree1, stTree *tree2) {
     return true;
 }
 
-// holds user sort function during sort
-static int (*sortChildrenCmpFn)(stTree *, stTree *b) = NULL;
+/* must warp function pointer in data, as ISO C doesn't allow conversions
+ * between void* and function pointers */
+struct sortFuncArgs {
+    int (*cmpFn)(stTree *a, stTree *b);
+};
 
-static int sortChildrenListCmpFn(const void *a, const void *b) {
-    return sortChildrenCmpFn((stTree*)a, (stTree*)b);
+static int sortChildrenListCmpFn(const void *a, const void *b, void* args) {
+    return ((struct sortFuncArgs*)args)->cmpFn((stTree*)a, (stTree*)b);
 }
 
-void stTree_sortChildren(stTree *root, int cmpFn(stTree *a, stTree *b)) {
-    sortChildrenCmpFn = cmpFn;
-    stList_sort(root->nodes, sortChildrenListCmpFn);
-    sortChildrenCmpFn = NULL;
+void stTree_sortChildren(stTree *root, int (*cmpFn)(stTree *a, stTree *b)) {
+    struct sortFuncArgs args = {cmpFn};
+    stList_sort2(root->nodes, sortChildrenListCmpFn, &args);
     for (int i = 0; i < stTree_getChildNumber(root); i++) {
         stTree_sortChildren(stTree_getChild(root, i), cmpFn);
     }
