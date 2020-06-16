@@ -242,7 +242,7 @@ void test_stList_sort(CuTest *testCase) {
     teardown();
 }
 
-int test_stList_sort2P(const void *a, const void *b, const void *extraArg) {
+int test_stList_sort2P(const void *a, const void *b, void *extraArg) {
     assert(strcmp(extraArg, "hello") == 0);
     return strcmp(a, b);
 }
