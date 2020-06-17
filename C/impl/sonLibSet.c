@@ -44,11 +44,16 @@ void stSet_destruct(stSet *set) {
     stHash_destruct(set->hash);
     free(set);
 }
+
+void stSet_setDestructor(stSet *set, void(*destructor)(void *)) {
+    stHash_setDestructKeys(set->hash, destructor);
+}
+
 void stSet_insert(stSet *set, void *key) {
     if (stSet_search(set, key) != NULL) { // This will ensure we don't end up with duplicate keys..
         stSet_remove(set, key);
     }
-    stHash_insert(set->hash, key, key); 
+    stHash_insert(set->hash, key, key);
 }
 void stSet_insertAll(stSet *set, stSet *setToAdd) {
     stSetIterator *setIt = stSet_getIterator(setToAdd);
@@ -164,6 +169,14 @@ stSet *stSet_getUnion(stSet *set1, stSet *set2) {
     stSet_destructIterator(sit);
     return set3;
 }
+
+int64_t stSet_sizeOfIntersection(stSet *set1, stSet *set2) {
+    stSet *s = stSet_getIntersection(set1, set2);
+    int64_t i = stSet_size(s);
+    stSet_destruct(s);
+    return i;
+}
+
 stSet *stSet_getIntersection(stSet *set1, stSet *set2) {
     stSet_verifySetsHaveSameFunctions(set1, set2);
     stSet *set3 = stSet_construct3(stSet_getHashFunction(set1), 

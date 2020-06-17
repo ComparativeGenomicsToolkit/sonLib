@@ -100,6 +100,16 @@ void stList_removeItem(stList *list, void *item);
 void *stList_removeFirst(stList *list);
 
 /*
+ * Removes the elements in the given interval.
+ */
+void stList_removeInterval(stList *list, int64_t start, int64_t length);
+
+/*
+ * Find the first index of item in the list.
+ */
+int64_t stList_find(stList *list, void *item);
+
+/*
  * Returns non-zero iff the stList contain one or more copies of references to the given item.
  */
 int64_t stList_contains(stList *list, void *item);
@@ -144,13 +154,17 @@ stListIterator *stList_copyIterator(stListIterator *iterator);
 
 /*
  * Sorts the stList with the given cmpFn.
+ * NOTE: cmpFn takes pointers to elements, not pointer to pointers as with
+ * C sort.
  */
-void stList_sort(stList *list, int cmpFn(const void *a, const void *b));
+void stList_sort(stList *list, int (*cmpFn)(const void *a, const void *b));
 
 /*
  * Sorts the stList with the given cmpFn, passing the extra argument to the comparison function.
+ * NOTE: cmpFn takes pointers to elements, not pointer to pointers as with
+ * C sort.
  */
-void stList_sort2(stList *list, int cmpFn(const void *a, const void *b, const void *extraArg), const void *extraArg);
+void stList_sort2(stList *list, int (*cmpFn)(const void *a, const void *b, void *extraArg), void *extraArg);
 
 /*
  * Permutes the list, by iterating over each element and swapping it randomly with a new location.

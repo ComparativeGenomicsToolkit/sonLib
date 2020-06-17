@@ -105,7 +105,7 @@ int stTree_getNumNodes(stTree *root);
 bool stTree_equals(stTree *eTree1, stTree *eTree2);
 
 /* sort children of each node.  Useful for creating reproducible test results */
-void stTree_sortChildren(stTree *root, int cmpFn(stTree *a, stTree *b));
+void stTree_sortChildren(stTree *root, int (*cmpFn)(stTree *a, stTree *b));
 
 /*
  * Parses the newick tree string according to the format standard (I think).
