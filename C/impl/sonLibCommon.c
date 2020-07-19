@@ -21,6 +21,8 @@
 // in glibc.
 #include <limits.h>
 #include <stdio.h>
+#include <time.h>
+
 #ifdef __GNU_LIBRARY__
 #define USE_BACKTRACE 1
 #define MAX_BACKTRACE_DEPTH 256
@@ -97,6 +99,11 @@ enum stLogLevel st_getLogLevel(void) {
 
 void st_logCritical(const char *string, ...) {
     if (st_getLogLevel() >= critical) {
+        time_t rawtime;
+        struct tm * timeinfo;
+        time ( &rawtime );
+        timeinfo = localtime ( &rawtime );
+        fprintf (stderr, "(%s) ", asctime (timeinfo) );        
         va_list ap;
         va_start(ap, string);
         vfprintf(stderr, string, ap);
@@ -106,6 +113,11 @@ void st_logCritical(const char *string, ...) {
 
 void st_logInfo(const char *string, ...) {
     if (st_getLogLevel() >= info) {
+        time_t rawtime;
+        struct tm * timeinfo;
+        time ( &rawtime );
+        timeinfo = localtime ( &rawtime );
+        fprintf (stderr, "(%s) ", asctime (timeinfo) );        
         va_list ap;
         va_start(ap, string);
         vfprintf(stderr, string, ap);
@@ -115,6 +127,11 @@ void st_logInfo(const char *string, ...) {
 
 void st_logDebug(const char *string, ...) {
     if (st_getLogLevel() >= debug) {
+        time_t rawtime;
+        struct tm * timeinfo;
+        time ( &rawtime );
+        timeinfo = localtime ( &rawtime );
+        fprintf (stderr, "(%s) ", asctime (timeinfo) );
         va_list ap;
         va_start(ap, string);
         vfprintf(stderr, string, ap);
