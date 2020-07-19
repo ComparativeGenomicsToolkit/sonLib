@@ -103,7 +103,9 @@ void st_logCritical(const char *string, ...) {
         struct tm * timeinfo;
         time ( &rawtime );
         timeinfo = localtime ( &rawtime );
-        fprintf (stderr, "(%s) ", asctime (timeinfo) );        
+        char* tstring = asctime(timeinfo);
+        tstring[strlen(tstring)-1] ='\0';
+        fprintf (stderr, "(%s) ", tstring);
         va_list ap;
         va_start(ap, string);
         vfprintf(stderr, string, ap);
@@ -117,7 +119,9 @@ void st_logInfo(const char *string, ...) {
         struct tm * timeinfo;
         time ( &rawtime );
         timeinfo = localtime ( &rawtime );
-        fprintf (stderr, "(%s) ", asctime (timeinfo) );        
+        char* tstring = asctime(timeinfo);
+        tstring[strlen(tstring)-1] ='\0';
+        fprintf (stderr, "(%s) ", tstring);
         va_list ap;
         va_start(ap, string);
         vfprintf(stderr, string, ap);
@@ -131,7 +135,9 @@ void st_logDebug(const char *string, ...) {
         struct tm * timeinfo;
         time ( &rawtime );
         timeinfo = localtime ( &rawtime );
-        fprintf (stderr, "(%s) ", asctime (timeinfo) );
+        char* tstring = asctime(timeinfo);
+        tstring[strlen(tstring)-1] ='\0';
+        fprintf (stderr, "(%s) ", tstring);
         va_list ap;
         va_start(ap, string);
         vfprintf(stderr, string, ap);
