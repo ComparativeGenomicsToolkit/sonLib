@@ -94,7 +94,11 @@ RANLIB ?= ranlib
 # location of Tokyo cabinet
 ifndef tokyoCabinetLib
 HAVE_TOKYO_CABINET = $(shell pkg-config --exists tokyocabinet; echo $$?)
-ifneq ($(wildcard /opt/local/include/tcbdb.h),)
+ifeq (${HAVE_TOKYO_CABINET},0)
+   # Install registered with pkg-config
+   tokyoCabinetIncl = $(shell pkg-config --cflags tokyocabinet) -DHAVE_TOKYO_CABINET=1
+   tokyoCabinetLib = $(shell pkg-config --libs-only-L tokyocabinet) -Wl,-rpath,$(shell pkg-config --variable=libdir tokyocabinet) $(shell pkg-config --libs-only-l --static tokyocabinet)
+else ifneq ($(wildcard /opt/local/include/tcbdb.h),)
    # OS/X with TC installed from MacPorts
    tcPrefix = /opt/local
    tokyoCabinetIncl = -I${tcPrefix}/include -DHAVE_TOKYO_CABINET=1
@@ -119,7 +123,11 @@ endif
 # location of Kyoto Tycoon
 ifndef kyotoTycoonLib
 HAVE_KYOTO_TYCOON = $(shell pkg-config --exists kyototycoon; echo $$?)
-ifneq ($(wildcard /opt/local/include/ktcommon.h),)
+ifeq (${HAVE_KYOTO_TYCOON},0)
+   # Install registered with pkg-config
+   kyotoTycoonIncl = $(shell pkg-config --cflags kyototycoon) -DHAVE_KYOTO_TYCOON=1
+   kyotoTycoonLib = $(shell pkg-config --libs-only-L kyototycoon) -Wl,-rpath,$(shell pkg-config --variable=libdir kyototycoon) $(shell pkg-config --libs-only-l --static kyototycoon)
+else ifneq ($(wildcard /opt/local/include/ktcommon.h),)
    # OS/X with TC installed from MacPorts
    ttPrefix = /opt/local
    kyotoTycoonIncl = -I${ttPrefix}/include -DHAVE_KYOTO_TYCOON=1 
@@ -134,10 +142,6 @@ else ifneq ($(wildcard /usr/include/ktcommon.h),)
    ttPrefix = /usr
    kyotoTycoonIncl = -I${ttPrefix}/include -DHAVE_KYOTO_TYCOON=1 
    kyotoTycoonLib = -L${ttPrefix}/lib -Wl,-rpath,${ttPrefix}/lib -lkyototycoon -lkyotocabinet -lz -lbz2 -lpthread -lm -lstdc++
-else ifeq (${HAVE_KYOTO_TYCOON},0)
-   # Install registered with pkg-config
-   kyotoTycoonIncl = $(shell pkg-config --cflags kyototycoon) -DHAVE_KYOTO_TYCOON=1
-   kyotoTycoonLib = $(shell pkg-config --libs-only-L kyototycoon) -Wl,-rpath,$(shell pkg-config --variable=libdir kyototycoon) $(shell pkg-config --libs-only-l --static kyototycoon)
 endif
 endif
 
