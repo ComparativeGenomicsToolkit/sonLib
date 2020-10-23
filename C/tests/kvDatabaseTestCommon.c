@@ -58,6 +58,7 @@ stKVDatabaseConf *kvDatabaseTestParseOptions(int argc, char *const *argv, const 
         {"timeout", required_argument, NULL, 'i'},
         {"maxKTRecordSize", required_argument, NULL, 'r'},
         {"maxKTBulkSetSize", required_argument, NULL, 'b'},
+	{"maxRedisBulkSetSize", required_argument, NULL, 'R'},
         {"user", required_argument, NULL, 'u'},
         {"pass", required_argument, NULL, 'p'},
         {"name", required_argument, NULL, 'n'},
@@ -72,11 +73,12 @@ stKVDatabaseConf *kvDatabaseTestParseOptions(int argc, char *const *argv, const 
     int64_t optMaxKTRecordSize = (int64_t) 1U << 27;
     int64_t optMaxKTBulkSetSize = (int64_t) 1U << 27;
     int64_t optMaxKTBulkSetNumRecords = (int64_t) 1U << 27;
+    int64_t optMaxRedisBulkSetSize = (int64_t) 1U << 30;
     const char *optUser = NULL;
     const char *optPass = NULL;
     const char *optName = NULL;
     int optKey, optIndex;
-    while ((optKey = getopt_long(argc, argv, "t:d:H:P:i:r:b:u:p:h", longOptions, &optIndex)) >= 0) {
+    while ((optKey = getopt_long(argc, argv, "t:d:H:P:i:r:b:R:u:p:h", longOptions, &optIndex)) >= 0) {
         switch (optKey) {
         case 't':
             optType = parseDbType(optarg);
@@ -99,6 +101,9 @@ stKVDatabaseConf *kvDatabaseTestParseOptions(int argc, char *const *argv, const 
         case 'b':
         	optMaxKTBulkSetSize = stSafeStrToInt64(optarg);
 			break;
+	case 'R':
+                optMaxRedisBulkSetSize = stSafeStrToInt64(optarg);
+                        break;
         case 'u':
             optUser = optarg;
             break;
@@ -145,7 +150,7 @@ stKVDatabaseConf *kvDatabaseTestParseOptions(int argc, char *const *argv, const 
         conf = stKVDatabaseConf_constructMySql(optHost, 0, optUser, optPass, optDb, "cactusDbTest");
         fprintf(stderr, "running MySQL sonLibKVDatabase tests\n");
     } else if (optType == stKVDatabaseTypeRedis) {
-        conf = stKVDatabaseConf_constructRedis(optHost, optPort);
+        conf = stKVDatabaseConf_constructRedis(optHost, optPort, optMaxRedisBulkSetSize);
         fprintf(stderr, "running Redis sonLibKVDatabase tests\n");
     }
     return conf;
