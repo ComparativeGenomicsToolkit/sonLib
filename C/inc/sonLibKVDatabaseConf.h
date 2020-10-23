@@ -35,10 +35,10 @@ stKVDatabaseConf *stKVDatabaseConf_constructKyotoTycoon(const char *host, unsign
                                                         const char *databaseDir, const char* databaseName);
 
 /* 
- * Construct a new database configuration object for a Kyoto Tycoon
+ * Construct a new database configuration object for a Redis
  * database remote object.
  */
-stKVDatabaseConf *stKVDatabaseConf_constructRedis(const char *host, unsigned port);
+stKVDatabaseConf *stKVDatabaseConf_constructRedis(const char *host, unsigned port, int64_t maxBulkSetSize);
 
 /* 
  * Construct a new database configuration object for a MySql database.
@@ -102,6 +102,9 @@ int64_t stKVDatabaseConf_getMaxKTBulkSetSize(stKVDatabaseConf *conf);
 
 /* get the maximum number of records in  kyoto tycoon bulk set */
 int64_t stKVDatabaseConf_getMaxKTBulkSetNumRecords(stKVDatabaseConf *conf);
+
+/* get the maximum size in bytes of a redis bulk set */
+int64_t stKVDatabaseConf_getMaxRedisBulkSetSize(stKVDatabaseConf *conf);
 
 /* get the user for server based databases */
 const char *stKVDatabaseConf_getUser(stKVDatabaseConf *conf);
