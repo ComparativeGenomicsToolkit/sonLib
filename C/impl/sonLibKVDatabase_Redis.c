@@ -261,16 +261,37 @@ static stList *bulkGetRecordsRange(stKVDatabase *database, int64_t firstKey, int
 
 static void bulkSetRecords(stKVDatabase *database, stList *records) {
     RedisDB *db = database->dbImpl;
+    stKVDatabaseConf* conf = stKVDatabase_getConf(database);
+    int64_t maxBulkSetSize = stKVDatabaseConf_getMaxRedisBulkSetSize(conf);
+    int64_t runningSize = 0;
+    int64_t countAddedRecords = 0;
     redisAppendCommand(db->ctxt, "MULTI");
     for(int64_t i = 0; i < stList_length(records); i++) {
         stKVDatabaseBulkRequest *request = stList_get(records, i);
+	if ((runningSize + request->size) > maxBulkSetSize){
+		redisAppendCommand(db->ctxt, "EXEC");
+    		redisReply *reply;
+    		reply = stRedisGetReply(db);
+    		freeReplyObject(reply);
+    		for(int64_t i = 0; i < countAddedRecords; i++) {
+        		reply = stRedisGetReply(db);
+        		freeReplyObject(reply);
+    		}
+    		reply = stRedisGetReply(db);
+    		freeReplyObject(reply);
+		runningSize = 0;
+		countAddedRecords = 0;
+		redisAppendCommand(db->ctxt, "MULTI");
+	}
         redisAppendCommand(db->ctxt, "SET %" PRIi64 " %b", request->key, request->value, request->size);
+	runningSize += request->size;
+	countAddedRecords += 1;
     }
     redisAppendCommand(db->ctxt, "EXEC");
     redisReply *reply;
     reply = stRedisGetReply(db);
     freeReplyObject(reply);
-    for(int64_t i = 0; i < stList_length(records); i++) {
+    for(int64_t i = 0; i < countAddedRecords; i++) {
         reply = stRedisGetReply(db);
         freeReplyObject(reply);
     }
