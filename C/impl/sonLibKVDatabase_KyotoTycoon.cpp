@@ -459,10 +459,13 @@ static void bulkSetRecords(stKVDatabase *database, stList *records) {
 
 // remove a bulk list atomically 
 static void bulkRemoveRecords(stKVDatabase *database, stList *records) {
+    stKVDatabaseConf* conf = stKVDatabase_getConf(database);
     RemoteDB *rdb = ((KTDB *) database->dbImpl)->rdb;
     vector<string> keys;
-
-    for(int32_t i=0; i<stList_length(records); i++) {
+    int64_t maxBulkSetNumRecords = stKVDatabaseConf_getMaxKTBulkSetNumRecords(conf);
+    int64_t num_records = stList_length(records);
+    
+    for(int32_t i=0; i<num_records; i++) {
         int64_t key = stIntTuple_get((stIntTuple *)stList_get(records, i), 0);
         if (recordIsSplit(database, key) == true) {
             removeSplitRecordIfPresent(database, key);
@@ -470,15 +473,12 @@ static void bulkRemoveRecords(stKVDatabase *database, stList *records) {
         else {
             keys.push_back(string((const char *)&key, sizeof(int64_t)));
         }
-    }
-
-    // test for empty list   
-    if (keys.empty()) {
-        return;
-    } 
-
-    if (rdb->remove_bulk(keys, true) < 1) {
-        stThrowNew(ST_KV_DATABASE_EXCEPTION_ID, "kyoto tycoon bulk remove record failed: %s", rdb->error().name());
+        if (!keys.empty() && (i == num_records - 1 || keys.size() >= maxBulkSetNumRecords)) {
+            if (rdb->remove_bulk(keys, true) < 1) {
+                stThrowNew(ST_KV_DATABASE_EXCEPTION_ID, "kyoto tycoon bulk remove record failed: %s", rdb->error().name());
+            }
+            keys.clear();
+        }
     }
 }
 
