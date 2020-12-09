@@ -223,13 +223,13 @@ static int64_t getXMLMaxKTBulkSetNumRecords(stHash *hash) {
     }
 }
 
-/* Default to 500M. Redis keys and values cannot be greater than 512M 
+/* Default to 510M. Redis keys and values cannot be greater than 512M 
  * refer to https://redis.io/topics/data-types-intro
  */
 static int64_t getXMLMaxRedisRecordSize(stHash *hash) {
     const char *value = stHash_search(hash, "max_record_size");
     if (value == NULL) {
-        return (int64_t) 500;
+        return (int64_t) 510000000;
     } else {
         return stSafeStrToInt64(value);
     }

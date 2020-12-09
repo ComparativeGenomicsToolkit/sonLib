@@ -68,7 +68,7 @@ static void fillSplitRecordsCache(RedisDB* db){
                 redisReply* subReply = reply->element[i];
                 assert(subReply->len == sizeof(int64_t));
                 int64_t key;
-                memcpy(&key, subReply->str, sizeof(int64_t));
+                memcpy((char *) &key, subReply->str, sizeof(int64_t));
                 stIntTuple *keyTuple = stIntTuple_construct1(key);
                 stSet_insert(db->splitRecords, keyTuple);
         }
@@ -95,6 +95,7 @@ static RedisDB *connect(stKVDatabaseConf *conf) {
 static void destructDB(stKVDatabase *database) {
     RedisDB *db = database->dbImpl;
     redisFree(db->ctxt);
+    free(db->splitRecords);
     free(db);
     database->dbImpl = NULL;
 }
@@ -125,7 +126,7 @@ static bool containsRecord(stKVDatabase *database, int64_t key) {
 
 /* check if a record is split directly from database*/
 static bool recordIsSplitDB(stKVDatabase *database, int64_t key) {
-    redisReply *reply = stRedisCommand(database->dbImpl, "SISMEMBER %s %b", SPLIT_RECORDS_KEY, &key, sizeof(int64_t));
+    redisReply *reply = stRedisCommand(database->dbImpl, "SISMEMBER %s %b", SPLIT_RECORDS_KEY, (char *) &key, sizeof(int64_t));
     assert(reply->type == REDIS_REPLY_INTEGER);
     bool isSplit;
     if (reply->integer) {
@@ -168,7 +169,7 @@ static void removeSplitRecordIfPresent(stKVDatabase *database, int64_t key) {
         if (getenv("ST_SPLIT_RECORD_DBG") != NULL) {
             fprintf(stderr, "removing split record %" PRIi64 "\n", key);
         }
-        reply = stRedisCommand(database->dbImpl, "SREM %s %b", SPLIT_RECORDS_KEY, &key, sizeof(int64_t));
+        reply = stRedisCommand(database->dbImpl, "SREM %s %b", SPLIT_RECORDS_KEY, (char *) &key, sizeof(int64_t));
         freeReplyObject(reply);
         reply = stRedisCommand(database->dbImpl, "DEL %" PRIi64, key);
         freeReplyObject(reply);
@@ -181,7 +182,7 @@ static void removeRecord(stKVDatabase *database, int64_t key) {
 	if (getenv("ST_SPLIT_RECORD_DBG") != NULL) {
             fprintf(stderr, "removing split record %" PRIi64 "\n", key);
         }
-        reply = stRedisCommand(database->dbImpl, "SREM %s %b", SPLIT_RECORDS_KEY, &key, sizeof(int64_t));
+        reply = stRedisCommand(database->dbImpl, "SREM %s %b", SPLIT_RECORDS_KEY, (char *) &key, sizeof(int64_t));
 	freeReplyObject(reply);
     }
     reply = stRedisCommand(database->dbImpl, "DEL %" PRIi64, key);
@@ -200,7 +201,7 @@ static void insertRecord(stKVDatabase *database, int64_t key, const void *value,
             fprintf(stderr, "attempting to create %" PRIi64 " records for key %" PRIi64 "\n", numSplitRecords, key);
         }
 
-	reply = stRedisCommand(database->dbImpl, "SADD %s %b", SPLIT_RECORDS_KEY, &key, sizeof(int64_t));
+	reply = stRedisCommand(database->dbImpl, "SADD %s %b", SPLIT_RECORDS_KEY, (char *) &key, sizeof(int64_t));
         freeReplyObject(reply);
         for (int64_t i = 0; i < numSplitRecords; i++) {
             reply = stRedisCommand(database->dbImpl, "RPUSH %" PRIi64 " %b", key,
@@ -348,7 +349,7 @@ static void bulkRemoveRecords(stKVDatabase *database, stList *records) {
 	    if (getenv("ST_SPLIT_RECORD_DBG") != NULL) {
                 fprintf(stderr, "removing split record %" PRIi64 "\n", key);
             }
-            redisAppendCommand(db->ctxt, "SREM %s %b", SPLIT_RECORDS_KEY, &key, sizeof(int64_t));
+            redisAppendCommand(db->ctxt, "SREM %s %b", SPLIT_RECORDS_KEY, (char *) &key, sizeof(int64_t));
 	    numberOfSplitRecords += 1;
 	}
         redisAppendCommand(db->ctxt, "DEL %" PRIi64, key);
