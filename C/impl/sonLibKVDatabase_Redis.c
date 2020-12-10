@@ -469,7 +469,7 @@ static void bulkSetRecords(stKVDatabase *database, stList *records) {
 		countAddedRecords = 0;
 		redisAppendCommand(db->ctxt, "MULTI");
 	}
-	if (request->size < maxRecordSize) {
+	if (request->size <= maxRecordSize) {
             redisAppendCommand(db->ctxt, "SET %" PRIi64 " %b", request->key, request->value, request->size);
 	    runningSize += request->size;
 	    countAddedRecords += 1;
