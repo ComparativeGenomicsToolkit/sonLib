@@ -20,7 +20,7 @@ const char *SORTED_SET_EXCEPTION_ID = "SORTED_SET_EXCEPTION";
 struct _stSortedSet {
     struct avl_table *sortedSet;
     void (*destructElementFn)(void *);
-    int numberOfLiveIterators;  // number of currently allocated iterators
+    //int numberOfLiveIterators;  // number of currently allocated iterators
 };
 
 struct _stSortedSetIterator {
@@ -34,10 +34,10 @@ static int st_sortedSet_cmpFn( const void *key1, const void *key2 ) {
 
 /* check if the sorted set is in a state that it can be modified */
 static void checkModifiable(stSortedSet *sortedSet) {
-    if (sortedSet->numberOfLiveIterators > 0) {
+    //if (sortedSet->numberOfLiveIterators > 0) {
         //assert(0);
-        stThrowNew(SORTED_SET_EXCEPTION_ID, "attempt to modify an stSortedSet while iterators are active");
-    }
+        //stThrowNew(SORTED_SET_EXCEPTION_ID, "attempt to modify an stSortedSet while iterators are active");
+    //}
 }
 
 stSortedSet *stSortedSet_construct(void) {
@@ -63,7 +63,7 @@ stSortedSet *stSortedSet_construct3(int (*compareFn)(const void *, const void *)
     i->compareFn = compareFn == NULL ? st_sortedSet_cmpFn : compareFn; //this is a total hack to make the function pass ISO C compatible.
     sortedSet->sortedSet = avl_create((int (*)(const void *, const void *, void *))st_sortedSet_construct3P, i, NULL);
     sortedSet->destructElementFn = destructElementFn;
-    sortedSet->numberOfLiveIterators = 0;
+    //sortedSet->numberOfLiveIterators = 0;
     return sortedSet;
 }
 
@@ -168,7 +168,7 @@ stSortedSetIterator *stSortedSet_getIterator(stSortedSet *items) {
     iterator = st_malloc(sizeof(stSortedSetIterator));
     iterator->sortedSet = items;
     avl_t_init(&iterator->traverser, items->sortedSet);
-    items->numberOfLiveIterators++;
+    //items->numberOfLiveIterators++;
     return iterator;
 }
 
@@ -190,8 +190,8 @@ stSortedSetIterator *stSortedSet_getReverseIterator(stSortedSet *items) {
 }
 
 void stSortedSet_destructIterator(stSortedSetIterator *iterator) {
-    assert(iterator->sortedSet->numberOfLiveIterators > 0);
-    iterator->sortedSet->numberOfLiveIterators--;
+    //assert(iterator->sortedSet->numberOfLiveIterators > 0);
+    //iterator->sortedSet->numberOfLiveIterators--;
     free(iterator);
 }
 
@@ -203,7 +203,7 @@ stSortedSetIterator *stSortedSet_copyIterator(stSortedSetIterator *iterator) {
     stSortedSetIterator *copyIterator;
     copyIterator = st_malloc(sizeof(stSortedSetIterator));
     copyIterator->sortedSet = iterator->sortedSet;
-    copyIterator->sortedSet->numberOfLiveIterators++;
+    //copyIterator->sortedSet->numberOfLiveIterators++;
     avl_t_copy(&copyIterator->traverser, &iterator->traverser);
     return copyIterator;
 }
