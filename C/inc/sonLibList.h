@@ -167,6 +167,11 @@ void stList_sort(stList *list, int (*cmpFn)(const void *a, const void *b));
 void stList_sort2(stList *list, int (*cmpFn)(const void *a, const void *b, void *extraArg), void *extraArg);
 
 /*
+ * For a sorted list, performs binary search to find an item.
+ */
+void *stList_binarySearch(stList *list, void *item, int (*cmpFn)(const void *a, const void *b));
+
+/*
  * Permutes the list, by iterating over each element and swapping it randomly with a new location.
  */
 void stList_shuffle(stList *list);

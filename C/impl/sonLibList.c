@@ -96,7 +96,7 @@ static void *st_list_appendP(void *current, int64_t *currentSize, int64_t newSiz
 
 void stList_append(stList *list, void *item) {
     if(stList_length(list) >= list->maxLength) {
-        list->list = st_list_appendP(list->list, &list->maxLength, list->maxLength*2 + MINIMUM_ARRAY_EXPAND_SIZE, sizeof(void *));
+        list->list = st_list_appendP(list->list, &list->maxLength, list->maxLength*1.3 + MINIMUM_ARRAY_EXPAND_SIZE, sizeof(void *));
     }
     list->list[list->length++] = item;
 }
@@ -272,6 +272,24 @@ static int sortList2CmpFn(const void *a, const void *b, void* args) {
 void stList_sort2(stList *list, int (*cmpFn)(const void *a, const void *b, void *extraArg), void *extraArg) {
     struct sort2FuncArgs sargs = {cmpFn, extraArg};
     safesort(list->list, stList_length(list), sizeof(void *), sortList2CmpFn, &sargs);
+}
+
+void *stList_binarySearch(stList *list, void *item, int (*cmpFn)(const void *a, const void *b)) {
+    int64_t l=0, h=stList_length(list); // interval (l, h) that item can be in, l is inclusive, h is exclusive
+    while(l < h) {
+        int64_t m = (l + h) / 2; // Mid point
+        void *listItem = stList_get(list, m);
+        int i = cmpFn(item, listItem);
+        if(i < 0) { // Item must occur before m in the list
+            h = m;
+        }
+        else if(i > 0) { // Item must occur after m in the list
+            l = m+1;
+        } else {
+            return listItem;
+        }
+    }
+    return NULL;
 }
 
 void stList_shuffle(stList *list) {
