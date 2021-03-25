@@ -83,20 +83,10 @@ void stList_set(stList *list, int64_t index, void *item) {
     list->list[index] = item;
 }
 
-static void *st_list_appendP(void *current, int64_t *currentSize, int64_t newSize, int64_t base) {
-    assert(*currentSize <= newSize);
-    void *new;
-    new = memcpy(st_malloc(((int64_t)base)*newSize), current, ((int64_t)base)*(*currentSize));
-    if(current != NULL) {
-        free(current);
-    }
-    *currentSize = newSize;
-    return new;
-}
-
 void stList_append(stList *list, void *item) {
     if(stList_length(list) >= list->maxLength) {
-        list->list = st_list_appendP(list->list, &list->maxLength, list->maxLength*1.3 + MINIMUM_ARRAY_EXPAND_SIZE, sizeof(void *));
+        list->maxLength = list->maxLength*1.3 + MINIMUM_ARRAY_EXPAND_SIZE;
+        list->list = st_realloc(list->list, list->maxLength * sizeof(void *));
     }
     list->list[list->length++] = item;
 }

@@ -32,9 +32,7 @@ static enum stLogLevel LOG_LEVEL = critical;
 void *st_malloc(size_t i) {
     void *j;
     j = malloc(i);
-    if (j == NULL) {
-        // FIXME: NULL actually isn't an error condition if 0 bytes
-        // are requested.
+    if (i > 0 && j == NULL) {
         st_errnoAbort("Malloc failed with a request for: %zu bytes", i);
     }
     return j;
@@ -42,9 +40,10 @@ void *st_malloc(size_t i) {
 
 void *st_realloc(void *buffer, size_t desiredSize) {
     void *newBuffer = realloc(buffer, desiredSize);
-    if(newBuffer == NULL) {
-        // FIXME: NULL actually isn't an error condition if 0 bytes
-        // are requested.
+    if(desiredSize > 0 && newBuffer == NULL) {
+        if(buffer != NULL) {
+            free(buffer); // Free the old buffer
+        }
         st_errnoAbort("Realloc failed with a request for: %zu bytes", desiredSize);
     }
     return newBuffer;
@@ -53,9 +52,7 @@ void *st_realloc(void *buffer, size_t desiredSize) {
 void *st_calloc(int64_t elementNumber, size_t elementSize) {
     void *k;
     k = calloc(elementNumber, elementSize);
-    if (k == NULL) {
-        // FIXME: NULL actually isn't an error condition if 0 bytes
-        // are requested.
+    if (elementNumber > 0 && k == NULL) {
         st_errnoAbort("Calloc failed with request for %lld lots of %zu bytes",
                       (long long int) elementNumber, elementSize);
     }
