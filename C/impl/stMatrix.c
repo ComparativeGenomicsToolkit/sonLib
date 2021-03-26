@@ -65,17 +65,26 @@ stMatrix *stMatrix_multiply(stMatrix *matrix1, stMatrix *matrix2) {
     return matrix3;
 }
 
-double *stMatrix_multiplySquareMatrixAndColumnVector(stMatrix *matrix, double *vector) {
-    if(stMatrix_m(matrix) != stMatrix_n(matrix)) {
+void stMatrix_multiplySquareMatrixAndColumnVector2(stMatrix *matrix, double *vector, double *output) {
+    int64_t m = stMatrix_m(matrix), n = stMatrix_n(matrix);
+    double *M = matrix->M;
+    if(m != n) {
         stThrow(stExcept_new("MATRIX_EXCEPTION", "Matrix is not a square matrix (%" PRIi64  "%" PRIi64 ") to multiply", stMatrix_m(matrix), stMatrix_n(matrix)));
     }
-    double *vector2 = st_calloc(stMatrix_n(matrix), sizeof(double));
-    for(int64_t i=0; i<stMatrix_n(matrix); i++) {
-        for(int64_t j=0; j<stMatrix_m(matrix); j++) {
-            vector2[i] += *stMatrix_getCell(matrix, i, j) * vector[j];
+    for(int64_t i=0; i<n; i++) {
+        output[i] = 0.0;
+    }
+    for(int64_t i=0; i<n; i++) {
+        for(int64_t j=0; j<m; j++) {
+            output[i] += M[i * m + j] * vector[j];
         }
     }
-    return vector2;
+}
+
+double *stMatrix_multiplySquareMatrixAndColumnVector(stMatrix *matrix, double *vector) {
+    double *output = st_malloc(stMatrix_n(matrix) * sizeof(double));
+    stMatrix_multiplySquareMatrixAndColumnVector2(matrix, vector, output);
+    return output;
 }
 
 stMatrix *stMatrix_add(stMatrix *matrix1, stMatrix *matrix2) {

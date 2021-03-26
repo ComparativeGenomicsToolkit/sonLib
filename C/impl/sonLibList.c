@@ -264,7 +264,7 @@ void stList_sort2(stList *list, int (*cmpFn)(const void *a, const void *b, void 
     safesort(list->list, stList_length(list), sizeof(void *), sortList2CmpFn, &sargs);
 }
 
-void *stList_binarySearch(stList *list, void *item, int (*cmpFn)(const void *a, const void *b)) {
+int64_t stList_binarySearchIndex(stList *list, void *item, int (*cmpFn)(const void *a, const void *b)) {
     int64_t l=0, h=stList_length(list); // interval (l, h) that item can be in, l is inclusive, h is exclusive
     while(l < h) {
         int64_t m = (l + h) / 2; // Mid point
@@ -275,11 +275,24 @@ void *stList_binarySearch(stList *list, void *item, int (*cmpFn)(const void *a, 
         }
         else if(i > 0) { // Item must occur after m in the list
             l = m+1;
-        } else {
-            return listItem;
+        } else { // else item at index i equals i
+            return m;
         }
     }
-    return NULL;
+    return -1;
+}
+
+void *stList_binarySearch(stList *list, void *item, int (*cmpFn)(const void *a, const void *b)) {
+    int64_t i = stList_binarySearchIndex(list, item, cmpFn);
+    return i == -1 ? NULL : stList_get(list, i);
+}
+
+int64_t stList_binarySearchFirstIndex(stList *list, void *item, int (*cmpFn)(const void *a, const void *b)) {
+    int64_t i = stList_binarySearchIndex(list, item, cmpFn);
+    while(i > 0 && cmpFn(item, stList_get(list, i-1)) == 0) {
+        i--;
+    }
+    return i;
 }
 
 void stList_shuffle(stList *list) {

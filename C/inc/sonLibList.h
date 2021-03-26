@@ -167,9 +167,22 @@ void stList_sort(stList *list, int (*cmpFn)(const void *a, const void *b));
 void stList_sort2(stList *list, int (*cmpFn)(const void *a, const void *b, void *extraArg), void *extraArg);
 
 /*
- * For a sorted list, performs binary search to find an item.
+ * For a sorted list, performs binary search to find the index of a given item.
+ * Item is the first argument passed to the cmpFn at each step. If item is is not in the list returns -1;
+ */
+int64_t stList_binarySearchIndex(stList *list, void *item, int (*cmpFn)(const void *a, const void *b));
+
+/*
+ * For a sorted list, performs binary search to find an instance of a given item.
+ * Item is the first argument passed to the cmpFn at each step. If item is not in the list returns NULL.
  */
 void *stList_binarySearch(stList *list, void *item, int (*cmpFn)(const void *a, const void *b));
+
+/*
+ * For a sorted list, performs binary search to find the index of the first occurrence of an item in the list.
+ * Item is the first argument passed to the cmpFn at each step. If item is not in the list returns -1
+ */
+int64_t stList_binarySearchFirstIndex(stList *list, void *item, int (*cmpFn)(const void *a, const void *b));
 
 /*
  * Permutes the list, by iterating over each element and swapping it randomly with a new location.

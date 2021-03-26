@@ -52,6 +52,11 @@ stMatrix *stMatrix_multiply(stMatrix *matrix1, stMatrix *matrix2);
 double *stMatrix_multiplySquareMatrixAndColumnVector(stMatrix *matrix1, double *vector);
 
 /*
+ *  As stMatrix_multiplySquareMatrixAndColumnVector but stores the result in output.
+ */
+void stMatrix_multiplySquareMatrixAndColumnVector2(stMatrix *matrix, double *vector, double *output);
+
+/*
  * Clone the matrix.
  */
 stMatrix *stMatrix_clone(stMatrix *matrix);
