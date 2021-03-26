@@ -282,6 +282,7 @@ int64_t stList_binarySearchIndex(stList *list, void *item, int (*cmpFn)(const vo
     return -1;
 }
 
+
 void *stList_binarySearch(stList *list, void *item, int (*cmpFn)(const void *a, const void *b)) {
     int64_t i = stList_binarySearchIndex(list, item, cmpFn);
     return i == -1 ? NULL : stList_get(list, i);
