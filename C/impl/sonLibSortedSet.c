@@ -86,23 +86,16 @@ stSortedSet *stSortedSet_copyConstruct(stSortedSet *sortedSet, void (*destructEl
     return sortedSet2;
 }
 
-static void (*st_sortedSet_destruct_destructElementFn)(void *);
-static void st_sortedSet_destructP(void *a, void *b) {
+static void st_sortedSet_destructP(void *a, void *b, void *extraArg) {
     assert(b != NULL);
-    st_sortedSet_destruct_destructElementFn(a);
+    void (*destroyFn)(void *) = (void (*)(void *))extraArg;
+    destroyFn(a);
 }
 
 void stSortedSet_destruct(stSortedSet *sortedSet) {
-#if 0 // FIXME
-    // this breaks the tests, which leak iterators.  Need to revisit with
-    // Benedict and also figure out how to tests this.  In the mean time,
-    // this is for an urgent bug.
-    checkModifiable(sortedSet);
-#endif
     void *a = sortedSet->sortedSet->avl_param;
     if(sortedSet->destructElementFn != NULL) {
-        st_sortedSet_destruct_destructElementFn = sortedSet->destructElementFn;
-        avl_destroy(sortedSet->sortedSet, (void (*)(void *, void *))st_sortedSet_destructP);
+        avl_destroy2(sortedSet->sortedSet, st_sortedSet_destructP, (void *)sortedSet->destructElementFn);
     }
     else {
         avl_destroy(sortedSet->sortedSet, NULL);

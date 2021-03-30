@@ -37,6 +37,7 @@ extern "C" {
 typedef int32_t avl_comparison_func (const void *avl_a, const void *avl_b,
                                  void *avl_param);
 typedef void avl_item_func (void *avl_item, void *avl_param);
+typedef void avl_item_func_with_extra_arg (void *avl_item, void *avl_param, void *extraArg);
 typedef void *avl_copy_func (void *avl_item, void *avl_param);
 
 #ifndef LIBAVL_ALLOCATOR
@@ -95,6 +96,7 @@ struct avl_table *avl_create (avl_comparison_func *, void *,
 struct avl_table *avl_copy (const struct avl_table *, avl_copy_func *,
                             avl_item_func *, struct libavl_allocator *);
 void avl_destroy (struct avl_table *, avl_item_func *);
+void avl_destroy2(struct avl_table *tree, avl_item_func_with_extra_arg *destroy, void *extraArg);
 void **avl_probe (struct avl_table *, void *);
 void *avl_insert (struct avl_table *, void *);
 void *avl_replace (struct avl_table *, void *);
