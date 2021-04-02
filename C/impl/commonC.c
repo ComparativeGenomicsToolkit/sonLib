@@ -125,6 +125,7 @@ void listReverse(struct List *list) {
     }
 }
 
+// todo: remove static vars
 void listIntersection(struct List *list, struct List *list2, struct List *list3) {
     //currently quadratic time, watch cost closely
     //output list can be the same as the input list
@@ -864,6 +865,7 @@ char *getTempFile(void) {
         tmpdir = "/tmp";
     }
 
+    // todo: fix this crap
     static int64_t counter = 0;
     while(counter < INT64_MAX) {
         char *pattern = stString_print(tmpdir[strlen(tmpdir)-1] == '/' ? "%sstTmp%" PRIi64 "_%" PRIi64 "" : "%s/stTmp%" PRIi64 "_%" PRIi64 "", tmpdir, getpid(), counter++);
