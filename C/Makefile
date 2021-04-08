@@ -12,7 +12,9 @@ quickTreeLibPath = ../externalTools/quicktree_1.1/include/
 
 testProgs = ${BINDIR}/sonLibTests ${BINDIR}/sonLib_kvDatabaseTest ${BINDIR}/sonLib_cigarTest ${BINDIR}/sonLib_fastaCTest
 
-dbInclFlags = ${tokyoCabinetIncl} ${kyotoTycoonIncl} ${tokyoTyrantIncl} ${mysqlIncl} ${pgsqlIncl} -I${quickTreeLibPath} ${hiRedisIncl}
+## Hacking to turnoff db database builds
+#dbInclFlags = ${tokyoCabinetIncl} ${kyotoTycoonIncl} ${tokyoTyrantIncl} ${mysqlIncl} ${pgsqlIncl} -I${quickTreeLibPath} ${hiRedisIncl}
+dbInclFlags = -I${quickTreeLibPath}
 
 CPPFLAGS += ${dbInclFlags} -I ../externalTools/cutest
 LDLIBS = ${LIBDIR}/sonLib.a ${dblibs} ${LIBS}
