@@ -48,32 +48,6 @@ class TestCase(unittest.TestCase):
         """Run most of the sonLib CuTests, fail if any of them fail."""
         system("sonLibTests %s" % getLogLevelString())
 
-    @needsProgram('ktserver')
-    def testSonLibKTTests(self):
-        """Run the sonLib KyotoTycoon interface tests."""
-        ktserver = Popen(["ktserver", "-le"])
-        # Give the server ample time to start up
-        time.sleep(3)
-        try:
-            check_call(["sonLib_kvDatabaseTest", "-t", "kyototycoon", "--port", "1978"])
-        finally:
-            ktserver.kill()
-
-    @needsPackage('hiredis')
-    def testSonLibRedisTests(self):
-        """Run the sonLib Redis interface tests."""
-        redis = Popen(["redis-server"])
-        # Give the server ample time to start up
-        time.sleep(3)
-        try:
-            check_call(["sonLib_kvDatabaseTest", "-t", "redis", "--port", "6379"])
-        finally:
-            redis.kill()
-
-    def testSonLibKVTokyoCabinet(self):
-        """Run the sonLib TokyoCabinet interface tests."""
-        system("sonLib_kvDatabaseTest --type=tokyocabinet")
-
 def allSuites():
     bioioSuite = unittest.makeSuite(bioioTest.TestCase, 'test')
     cigarsSuite = unittest.makeSuite(cigarsTest.TestCase, 'test')
