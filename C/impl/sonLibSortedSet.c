@@ -86,16 +86,15 @@ stSortedSet *stSortedSet_copyConstruct(stSortedSet *sortedSet, void (*destructEl
     return sortedSet2;
 }
 
-static void st_sortedSet_destructP(void *a, void *b, void *extraArg) {
+static void st_sortedSet_destructP(void *a, void *b, void (*extraArg)(void*)) {
     assert(b != NULL);
-    void (*destroyFn)(void *) = (void (*)(void *))extraArg;
-    destroyFn(a);
+    extraArg(a);
 }
 
 void stSortedSet_destruct(stSortedSet *sortedSet) {
     void *a = sortedSet->sortedSet->avl_param;
     if(sortedSet->destructElementFn != NULL) {
-        avl_destroy2(sortedSet->sortedSet, st_sortedSet_destructP, (void *)sortedSet->destructElementFn);
+        avl_destroy2(sortedSet->sortedSet, st_sortedSet_destructP, sortedSet->destructElementFn);
     }
     else {
         avl_destroy(sortedSet->sortedSet, NULL);

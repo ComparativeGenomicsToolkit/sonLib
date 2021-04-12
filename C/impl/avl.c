@@ -826,7 +826,7 @@ avl_copy(const struct avl_table *org, avl_copy_func *copy,
 
 /* Frees storage allocated for |tree|.
  If |destroy != NULL|, applies it to each data item in inorder. */
-void avl_destroy2(struct avl_table *tree, avl_item_func_with_extra_arg *destroy, void *extraArg) {
+void avl_destroy2(struct avl_table *tree, avl_item_func_with_extra_arg *destroy, void (*extraArg)(void*)) {
     struct avl_node *p, *q;
 
     assert (tree != NULL);
