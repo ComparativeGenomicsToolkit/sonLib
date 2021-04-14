@@ -3,8 +3,7 @@
  *
  * Released under the MIT license, see LICENSE.txt
  */
-#define _BSD_SOURCE // for mkstemp
-#define _DEFAULT_SOURCE // this keeps new glib from complaining about _BSD_SOURCE
+#define _DEFAULT_SOURCE // for mkstemp
 #include "fastCMaths.h"
 #include "commonC.h"
 #include "hashTableC.h"
