@@ -3,7 +3,7 @@
  *
  * Released under the MIT license, see LICENSE.txt
  */
-
+#define _BSD_SOURCE   // for mkstemp
 #include "fastCMaths.h"
 #include "commonC.h"
 #include "hashTableC.h"
@@ -20,6 +20,7 @@
 #include <unistd.h> // for "legacy" systems
 #include <fcntl.h>
 #include <errno.h>
+#include <stdlib.h>
 
 void exitOnFailure(int64_t exitValue, const char *failureMessage, ...) {
     if (exitValue != 0) {
@@ -132,10 +133,7 @@ void listIntersection(struct List *list, struct List *list2, struct List *list3)
     int64_t i;
     int64_t j;
     int64_t k;
-    static void **scratch;
-    static int64_t scratchSize;
-    scratch = arrayResize(scratch, &scratchSize, list->length + 1,
-            sizeof(void *));
+    void **scratch = st_malloc(((int64_t) list->length + 1) * sizeof(void *));
     k = 0;
     for (i = 0; i < list->length; i++) {
         for (j = 0; j < list2->length; j++) {
@@ -149,6 +147,7 @@ void listIntersection(struct List *list, struct List *list2, struct List *list3)
     for (i = 0; i < k; i++) {
         listAppend(list3, scratch[i]);
     }
+    free(scratch);
 }
 
 void listCopyResize(struct List *list, int64_t newMaxSize) {
@@ -840,183 +839,29 @@ int64_t destructRandomDir(char *tempDir) {
     return 0;
 }
 
-struct TempFileTree *tempFileTree = NULL;
-
-void initialiseTempFileTree(char *rootDir, int64_t filesPerDir,
-        int64_t levelNumber) {
-    tempFileTree = constructTempFileTree(rootDir, filesPerDir, levelNumber);
-}
-
 char *getTempFile(void) {
-    /*
-     * Gets a temporary file, using the tempFileTree, if initialised.
-     */
-    if (tempFileTree != NULL) {
-        return tempFileTree_getTempFile(tempFileTree);
-    }
-
-    char *tmpdir = NULL;
-    if ((getuid() == geteuid()) && (getgid() == getegid())) {
-        if (!((tmpdir = getenv("TMPDIR")))) {
-            tmpdir = getenv("TMP");
-        }
-    }
+    char *tmpdir = getenv("TMPDIR");
     if (!tmpdir) {
         tmpdir = "/tmp";
     }
 
-    // todo: fix this crap
-    static int64_t counter = 0;
-    while(counter < INT64_MAX) {
-        char *pattern = stString_print(tmpdir[strlen(tmpdir)-1] == '/' ? "%sstTmp%" PRIi64 "_%" PRIi64 "" : "%s/stTmp%" PRIi64 "_%" PRIi64 "", tmpdir, getpid(), counter++);
-        int fd = open(pattern, O_CREAT|O_EXCL, 0600);
-        if(fd >= 0) {
-            close(fd);
-            return pattern;
-        }
-        else if(errno != EEXIST){
-            st_errnoAbort("Couldn't create temporary file's file descriptor for %s", pattern);
-        }
-        free(pattern);
+    char* template = st_malloc((strlen(tmpdir) + 12) * sizeof(char));
+    if (tmpdir[strlen(tmpdir)-1] == '/') {
+        sprintf(template, "%sstTmpXXXXXX", tmpdir);
+    } else {
+        sprintf(template, "%s/stTmpXXXXXX", tmpdir);
     }
-    st_errnoAbort("Exhausted temporary file patterns"); //This is pretty bloody unlikely
-    return NULL;
+    int fd = mkstemp(template);
+    if (fd < 0) {
+        st_errnoAbort("failed to create temporary file with pattern %s", template);
+    }
+    close(fd);
+    return template;
 }
 
 void removeTempFile(char *tempFile) {
-    /*
-     * Removes a temporary file created by getTempFile.
-     * Also frees the associated string.
-     */
-    if (tempFileTree != NULL) {
-        tempFileTree->tempFilesDestroyed++;
-    }
     remove(tempFile);
     free(tempFile);
-}
-
-void removeAllTempFiles(void) {
-    assert(tempFileTree != NULL);
-    destructTempFileTree(tempFileTree);
-    tempFileTree = NULL;
-}
-
-struct TempFileTree *constructTempFileTree(char *rootDir, int64_t filesPerDir,
-        int64_t levelNumber) {
-    struct TempFileTree *tempFileTree;
-    int64_t i, j;
-    char *cA;
-    char *cA2;
-    char *cA3;
-
-    i = sizeof(char) * (strlen(rootDir) + 30 * levelNumber + 1);
-    cA = st_malloc(i); //generous safety space.
-    cA2 = st_malloc(i);
-
-    tempFileTree = st_malloc(sizeof(struct TempFileTree));
-    sprintf(cA, "%s/tempC", rootDir);
-    tempFileTree->rootDir = st_malloc(sizeof(char) * (strlen(cA) + 1));
-    strcpy(tempFileTree->rootDir, cA);
-    mkdir(tempFileTree->rootDir, S_IRWXU);
-
-    tempFileTree->filesPerDir = filesPerDir;
-    tempFileTree->levelNumber = levelNumber;
-    tempFileTree->levelsArray = st_malloc(sizeof(int64_t) * levelNumber);
-    for (i = 0; i < levelNumber; i++) {
-        tempFileTree->levelsArray[i] = 0;
-    }
-    sprintf(cA, "%s", tempFileTree->rootDir); //defensive
-    for (i = 0; i < levelNumber - 1; i++) {
-        sprintf(cA2, "%s/c0", cA);
-        cA3 = cA;
-        cA = cA2;
-        cA2 = cA3;
-        j = mkdir(cA, S_IRWXU);
-        if (j != 0) {
-            exit(1);
-        }
-    }
-    tempFileTree->tempFilesCreated = 0;
-    tempFileTree->tempFilesDestroyed = 0;
-
-    free(cA);
-    free(cA2);
-    return tempFileTree;
-}
-
-void destructTempFileTree(struct TempFileTree *tempFileTree) {
-    //does not currently dissmantle the directory structure/temp files!
-    char cA[1000];
-    int64_t i;
-
-    st_logDebug("Created: %" PRIi64 " temp files, actively destroyed: %" PRIi64 " temp files\n",
-            tempFileTree->tempFilesCreated, tempFileTree->tempFilesDestroyed);
-
-    sprintf(cA, "rm -rf %s", tempFileTree->rootDir);
-    i = system(cA);
-    if (i != 0) {
-        exit(i); //failed to remove root directory structure of temp files.
-    }
-    free(tempFileTree->levelsArray);
-    free(tempFileTree->rootDir);
-    free(tempFileTree);
-}
-
-char *tempFileTree_getTempFile(struct TempFileTree *tempFileTree) {
-    int64_t i, j, k;
-    char *cA;
-    char *cA2;
-    char *cA3;
-    char *cA4;
-    FILE *fileHandle;
-
-    i = sizeof(char) * (strlen(tempFileTree->rootDir) + 30
-            * tempFileTree->levelNumber + 1);
-    cA = st_malloc(i); //generous safety space.
-    cA2 = st_malloc(i);
-    cA4 = NULL;
-    for (i = tempFileTree->levelNumber - 1; i >= 0; i--) {
-        if (tempFileTree->levelsArray[i] == tempFileTree->filesPerDir) {
-            if (i == 0) {
-                fprintf(stderr, "Run out of temporary files!\n");
-                exit(1);
-            }
-            tempFileTree->levelsArray[i] = 0;
-        } else {
-            tempFileTree->levelsArray[i] += 1;
-            if (i != tempFileTree->levelNumber - 1) {
-                for (j = i; j < tempFileTree->levelNumber - 1; j++) {
-                    sprintf(cA, "%s", tempFileTree->rootDir);
-                    for (k = 0; k <= j; k++) {
-                        sprintf(cA2, "%s/c" INT_STRING, cA,
-                                tempFileTree->levelsArray[k]);
-                        cA3 = cA;
-                        cA = cA2;
-                        cA2 = cA3;
-                    }
-                    mkdir(cA, S_IRWXU);
-                }
-            }
-            sprintf(cA, "%s", tempFileTree->rootDir);
-            for (j = 0; j < tempFileTree->levelNumber; j++) {
-                sprintf(cA2, "%s/c" INT_STRING, cA,
-                        tempFileTree->levelsArray[j]);
-                cA3 = cA;
-                cA = cA2;
-                cA2 = cA3;
-            }
-            cA4 = st_malloc(sizeof(char) * (strlen(cA) + 1));
-            strcpy(cA4, cA);
-            break;
-        }
-    }
-    assert(cA4 != NULL);
-    fileHandle = fopen(cA4, "w");
-    fclose(fileHandle);
-    free(cA);
-    free(cA2);
-    tempFileTree->tempFilesCreated++;
-    return cA4;
 }
 
 /*

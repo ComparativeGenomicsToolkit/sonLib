@@ -251,28 +251,9 @@ int64_t constructRandomDir(const char *tempFilePath, char **tempDir);
 
 int64_t destructRandomDir(char *tempDir);
 
-void initialiseTempFileTree(char *rootDir, int64_t filesPerDir, int64_t levelNumber);
-
 char *getTempFile(void);
 
 void removeTempFile(char *tempFile);
-
-void removeAllTempFiles(void);
-
-struct TempFileTree {
-    char *rootDir;
-    int64_t filesPerDir;
-    int64_t *levelsArray;
-    int64_t levelNumber;
-    int64_t tempFilesCreated;
-    int64_t tempFilesDestroyed;
-};
-
-struct TempFileTree *constructTempFileTree(char *rootDir, int64_t filesPerDir, int64_t levelNumber);
-
-void destructTempFileTree(struct TempFileTree *tempFileTree);
-
-char *tempFileTree_getTempFile(struct TempFileTree *tempFileTree);
 
 /////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////

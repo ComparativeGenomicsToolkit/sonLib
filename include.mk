@@ -12,7 +12,7 @@ LIBDIR ?= ${rootPath}/../sonLib/lib
 #
 # - enable PIC as some newer GCC versions are configured to link PIE by default,
 #   which will not link with non-PIC objcts
-CFLAGS += -std=c99 -fPIC
+CFLAGS += -fPIC -std=c99
 CXXFLAGS += -fPIC
 
 ##
