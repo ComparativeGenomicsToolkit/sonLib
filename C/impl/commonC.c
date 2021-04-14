@@ -20,6 +20,7 @@
 #include <unistd.h> // for "legacy" systems
 #include <fcntl.h>
 #include <errno.h>
+#include <stdlib.h>
 
 void exitOnFailure(int64_t exitValue, const char *failureMessage, ...) {
     if (exitValue != 0) {
@@ -865,22 +866,13 @@ char *getTempFile(void) {
         tmpdir = "/tmp";
     }
 
-    // todo: fix this crap
-    static int64_t counter = 0;
-    while(counter < INT64_MAX) {
-        char *pattern = stString_print(tmpdir[strlen(tmpdir)-1] == '/' ? "%sstTmp%" PRIi64 "_%" PRIi64 "" : "%s/stTmp%" PRIi64 "_%" PRIi64 "", tmpdir, getpid(), counter++);
-        int fd = open(pattern, O_CREAT|O_EXCL, 0600);
-        if(fd >= 0) {
-            close(fd);
-            return pattern;
-        }
-        else if(errno != EEXIST){
-            st_errnoAbort("Couldn't create temporary file's file descriptor for %s", pattern);
-        }
-        free(pattern);
+    char* template = malloc((strlen(tmpdir) + 12) * sizeof(char));
+    if (tmpdir[strlen(tmpdir)-1] == '/') {
+        sprintf(template, "%sstTmpXXXXXX", tmpdir);
+    } else {
+        sprintf(template, "%s/stTmpXXXXXX", tmpdir);
     }
-    st_errnoAbort("Exhausted temporary file patterns"); //This is pretty bloody unlikely
-    return NULL;
+    return mktemp(template);
 }
 
 void removeTempFile(char *tempFile) {
