@@ -133,10 +133,7 @@ void listIntersection(struct List *list, struct List *list2, struct List *list3)
     int64_t i;
     int64_t j;
     int64_t k;
-    static void **scratch;
-    static int64_t scratchSize;
-    scratch = arrayResize(scratch, &scratchSize, list->length + 1,
-            sizeof(void *));
+    void **scratch = st_malloc(((int64_t) list->length + 1) * sizeof(void *));
     k = 0;
     for (i = 0; i < list->length; i++) {
         for (j = 0; j < list2->length; j++) {
@@ -150,6 +147,7 @@ void listIntersection(struct List *list, struct List *list2, struct List *list3)
     for (i = 0; i < k; i++) {
         listAppend(list3, scratch[i]);
     }
+    free(scratch);
 }
 
 void listCopyResize(struct List *list, int64_t newMaxSize) {
