@@ -3,7 +3,22 @@
  *
  * Released under the MIT license, see LICENSE.txt
  */
-#define _DEFAULT_SOURCE // for mkstemp
+
+// to get mkstemp, older version of glibc require _BSD_SOURCE, newer
+// version need to use _DEFAULT_SOURCE to not generate a warning.
+#if defined(__GNUC_)
+    // gcc
+    #if __GNUC_PREREQ(2,19)
+        #define _DEFAULT_SOURCE
+    #else
+        #define _BSD_SOURCE
+    #endif
+#else
+    // non-gcc
+    #define _BSD_SOURCE
+    #define _DEFAULT_SOURCE
+#endif
+
 #include "fastCMaths.h"
 #include "commonC.h"
 #include "hashTableC.h"
