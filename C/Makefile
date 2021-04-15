@@ -6,7 +6,7 @@ libSources = $(wildcard impl/*.c)
 cppSources = $(wildcard impl/*.cpp)
 libObjs = ${libSources:%.c=%.o} ${cppSources:%.cpp: %.o}
 libHeaders = $(wildcard inc/*.h)
-libHeaderDep = $(foreach l, ${libHeaders}, ${LIBDIR}/$(notdir $l))
+libHeadersDep = $(foreach l, ${libHeaders}, ${LIBDIR}/$(notdir $l))
 libInternalHeaders = $(wildcard impl/*.h)
 libTests = $(wildcard tests/sonLib*.c) $(wildcard tests/st*)
 quickTreeObjects = ../externalTools/quicktree_1.1/obj/buildtree.o ../externalTools/quicktree_1.1/obj/cluster.o ../externalTools/quicktree_1.1/obj/distancemat.o ../externalTools/quicktree_1.1/obj/options.o ../externalTools/quicktree_1.1/obj/sequence.o ../externalTools/quicktree_1.1/obj/tree.o ../externalTools/quicktree_1.1/obj/util.o
@@ -21,7 +21,7 @@ dbInclFlags = -I${quickTreeLibPath}
 CPPFLAGS += ${dbInclFlags} -I ../externalTools/cutest
 LDLIBS = ${LIBDIR}/sonLib.a ${dblibs} ${LIBS}
 
-all : ${LIBDIR}/sonLib.a ${testProgs}
+all : ${LIBDIR}/sonLib.a ${testProgs} ${libHeadersDep}
 
 # note: old Makefile put .o files in this directory, clean if for now (FIXME: remove soon)
 clean : 
