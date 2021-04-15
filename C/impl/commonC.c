@@ -860,7 +860,7 @@ char *getTempFile(void) {
         tmpdir = "/tmp";
     }
 
-    char* template = st_malloc((strlen(tmpdir) + 12) * sizeof(char));
+    char* template = st_malloc((strlen(tmpdir) + 13) * sizeof(char));
     if (tmpdir[strlen(tmpdir)-1] == '/') {
         sprintf(template, "%sstTmpXXXXXX", tmpdir);
     } else {
