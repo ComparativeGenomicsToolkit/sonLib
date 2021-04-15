@@ -7,7 +7,6 @@ all : cP ${BINDIR}/sonLib_daemonize.py
 
 clean : cP.clean externalToolsP.clean
 	rm -f ${BINDIR}/sonLib_daemonize.py
-	rm -rf ${libFiles} ${libFiles:%=%c}
 
 cP: externalToolsP
 	cd C && ${MAKE} all

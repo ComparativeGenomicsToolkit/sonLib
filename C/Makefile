@@ -2,11 +2,13 @@ rootPath = ..
 
 include ../include.mk
 
-libSources = impl/*.c
-cppSources = impl/*.cpp
+libSources = $(wildcard impl/*.c)
+cppSources = $(wildcard impl/*.cpp)
+libObjs = ${libSources:%.c=%.o} ${cppSources:%.cpp: %.o}
 libHeaders = $(wildcard inc/*.h)
-libInternalHeaders = impl/*.h
-libTests = tests/sonLib*.c tests/st*
+libHeaderDep = $(foreach l, ${libHeaders}, ${LIBDIR}/$(notdir $l))
+libInternalHeaders = $(wildcard impl/*.h)
+libTests = $(wildcard tests/sonLib*.c) $(wildcard tests/st*)
 quickTreeObjects = ../externalTools/quicktree_1.1/obj/buildtree.o ../externalTools/quicktree_1.1/obj/cluster.o ../externalTools/quicktree_1.1/obj/distancemat.o ../externalTools/quicktree_1.1/obj/options.o ../externalTools/quicktree_1.1/obj/sequence.o ../externalTools/quicktree_1.1/obj/tree.o ../externalTools/quicktree_1.1/obj/util.o
 quickTreeLibPath = ../externalTools/quicktree_1.1/include/
 
@@ -21,8 +23,9 @@ LDLIBS = ${LIBDIR}/sonLib.a ${dblibs} ${LIBS}
 
 all : ${LIBDIR}/sonLib.a ${testProgs}
 
+# note: old Makefile put .o files in this directory, clean if for now (FIXME: remove soon)
 clean : 
-	rm -rf  ${BINDIR} ${LIBDIR} *.o
+	rm -rf  ${BINDIR} ${LIBDIR} ${libObjs} *.o
 
 ${BINDIR}/sonLibTests : ${libTests} ${libInternalHeaders} ${LIBDIR}/sonLib.a ${LIBDIR}/cuTest.a tests/allTests.c
 	@mkdir -p $(dir $@)
@@ -48,11 +51,14 @@ ${LIBDIR}/%.h: inc/%.h
 	@mkdir -p $(dir $@)
 	cp $< $@
 
-${LIBDIR}/sonLib.a : ${libSources} ${cppSources} $(foreach l, ${libHeaders}, ${LIBDIR}/$(notdir $l)) ${libInternalHeaders}
+%.o: %.c ${libHeadersDep} ${libInternalHeaders}
+	${CC} ${CPPFLAGS} ${CFLAGS} -c -o $@ $<
+%.o: %.cpp ${libHeadersDep} ${libInternalHeaders}
+	${CXX} ${CXXFLAGS} ${CPPFLAGS} -c -o $@ $<
+
+${LIBDIR}/sonLib.a : ${libObjs}
 	@mkdir -p $(dir $@)
-	${CC} ${CPPFLAGS} ${CFLAGS} -c ${libSources}
-	${CXX} ${CXXFLAGS} ${CPPFLAGS} -c ${cppSources}
-	${AR} rc sonLib.a *.o ${quickTreeObjects}
+	${AR} rc sonLib.a ${libObjs} ${quickTreeObjects}
 	${RANLIB} sonLib.a 
 	mv sonLib.a ${LIBDIR}/
 

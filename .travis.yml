@@ -1,5 +1,5 @@
 sudo: required
-dist: trusty
+dist: bionic
 language: c++
 script:
   - make && PATH=$PATH:`pwd`/bin make test

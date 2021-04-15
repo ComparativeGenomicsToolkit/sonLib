@@ -62,7 +62,7 @@ char *stFile_getLineFromFile(FILE *fileHandle) {
 }
 
 stList *stFile_getLinesFromFile(char *fileName) {
-    FILE *fh = fopen(fileName, "r");
+    FILE *fh = st_fopen(fileName, "r");
     stList *lines = stList_construct3(0, free);
     char *line;
     while ((line = stFile_getLineFromFile(fh)) != NULL) {
