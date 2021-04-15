@@ -36,6 +36,9 @@ int main(int argc, char *argv[]) {
         fastaWrite(seqs->list[i], seqNames->list[i], fileHandle);
     }
     fclose(fileHandle);
+    destructList(seqs);
+    destructList(seqLengths);
+    destructList(seqNames);
 
     return 0;
 }
