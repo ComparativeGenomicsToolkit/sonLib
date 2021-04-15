@@ -54,10 +54,10 @@ void readDoubles(const char *string, int64_t number, double *dA) {
     int64_t i;
 
     tempFile = getTempFile(); //This is kind of a hack.
-    fileHandle = fopen(tempFile, "w");
+    fileHandle = st_fopen(tempFile, "w");
     fprintf(fileHandle, "%s", string);
     fclose(fileHandle);
-    fileHandle = fopen(tempFile, "r");
+    fileHandle = st_fopen(tempFile, "r");
     for(i=0; i<number; i++) {
         int j = fscanf(fileHandle, "%lf", &(dA[i]));
         (void)j;
@@ -504,7 +504,7 @@ struct CharColumnAlignment *multiFastaRead(char *fastaFile) {
     seqs = constructEmptyList(0, free);
     seqLengths = constructEmptyList(0, free);
     fastaNames = constructEmptyList(0, free);
-    fileHandle = fopen(fastaFile, "r");
+    fileHandle = st_fopen(fastaFile, "r");
     fastaRead(fileHandle, seqs, seqLengths, fastaNames);
     fclose(fileHandle);
 

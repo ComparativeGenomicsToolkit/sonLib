@@ -32,7 +32,7 @@ int main(int argc, char *argv[]) {
     }
 
     pAs = constructEmptyList(0, (void (*)(void *))destructPairwiseAlignment);
-    fileHandle = fopen(argv[1], "r");
+    fileHandle = st_fopen(argv[1], "r");
     pA = cigarRead(fileHandle);
     while(pA != NULL) {
         listAppend(pAs, pA);
@@ -40,7 +40,7 @@ int main(int argc, char *argv[]) {
     }
     fclose(fileHandle);
 
-    fileHandle = fopen(argv[1], "w");
+    fileHandle = st_fopen(argv[1], "w");
     for(i=0; i<pAs->length; i++) {
         cigarWrite(fileHandle, pAs->list[i], keepProbs);
     }

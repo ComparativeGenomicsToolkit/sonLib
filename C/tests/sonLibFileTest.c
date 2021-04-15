@@ -26,7 +26,7 @@ static void setup() {
     //Now the containing files
 
     //Temp file 1
-    FILE *fileHandle = fopen(tempFileName1, "w");
+    FILE *fileHandle = st_fopen(tempFileName1, "w");
     fprintf(fileHandle, "hello world\n");
     fprintf(fileHandle, "foo bar 123456\n");
     fprintf(fileHandle, " \n");
@@ -36,13 +36,13 @@ static void setup() {
     fclose(fileHandle);
 
     //Temp file 2
-    fileHandle = fopen(tempFileName2, "w");
+    fileHandle = st_fopen(tempFileName2, "w");
     fclose(fileHandle);
 }
 
 static void test_stFile_getLineFromFile(CuTest *testCase) {
     setup();
-    FILE *fileHandle = fopen(tempFileName1, "r");
+    FILE *fileHandle = st_fopen(tempFileName1, "r");
     char *s = stFile_getLineFromFile(fileHandle);
     CuAssertStrEquals(testCase, "hello world", s);
     free(s);
