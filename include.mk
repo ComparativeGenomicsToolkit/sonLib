@@ -20,6 +20,13 @@ CXXFLAGS += -fPIC
 CPPFLAGS += -Iinc -Iimpl
 
 ##
+# On ARM/clang (but not on Mac?) char is unsigned by default
+# This breaks file parsing in sonLib which compares char to EOF (-1)
+# https://stackoverflow.com/questions/19555248/clang-make-char-signed-by-default-on-arm
+CFLAGS += -fsigned-char
+CPPFLAGS += -fsigned-char
+
+##
 # For GCC, the C++ 11 aplication binary interface must match the version
 # that HDF5 uses.  Change the ABI version can address errors about undefined functions that vary
 # by string type, such as 
