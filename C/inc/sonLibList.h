@@ -192,10 +192,13 @@ void *stList_binarySearch(stList *list, void *item, int (*cmpFn)(const void *a, 
 int64_t stList_binarySearchFirstIndex(stList *list, void *item, int (*cmpFn)(const void *a, const void *b));
 
 /*
- * For a sorted list, performs binary search to find the index of the first occurrence of an item in the list that is not considered to go before item.  ie it is equivalent or goes after.  named after std::lower_bound in C++
+ * For a sorted list, performs binary search to find the index of the first occurrence of an item in the list that is not considered to go before item.  ie it is equivalent or goes after.  named after std::lower_bound in C++.  If no element found, return size of list
  * Item is the first argument passed to the cmpFn at each step. If item is not in the list returns -1
  */  
 int64_t stList_lowerBound(stList *list, void *item, int (*cmpFn)(const void *a, const void *b));
+
+/** Like stList_lowerBound, but operators on given INCLUSIVE interval [first, last] */
+int64_t stList_lowerBoundInterval(stList *list, void* item, int64_t first, int64_t last, int (*cmpFn)(const void *a, const void *b));
   
 /*
  * Permutes the list, by iterating over each element and swapping it randomly with a new location.

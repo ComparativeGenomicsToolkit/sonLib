@@ -302,21 +302,31 @@ int64_t stList_binarySearchFirstIndex(stList *list, void *item, int (*cmpFn)(con
 }
 
 int64_t stList_lowerBound(stList *list, void *item, int (*cmpFn)(const void *a, const void *b)) {
-    // https://stackoverflow.com/questions/6443569/implementation-of-c-lower-bound
-    int64_t l = 0;
-    int64_t h = stList_length(list); 
+    return stList_lowerBoundInterval(list, item, 0, stList_length(list), cmpFn);
+}
+
+int64_t stList_lowerBoundInterval(stList *list, void* item, int64_t first, int64_t last, int (*cmpFn)(const void *a, const void *b)) {
+    // https://www.geeksforgeeks.org/implementing-upper_bound-and-lower_bound-in-c/
+    int64_t l = first;
+    int64_t h = last;
     while(l < h) {
-        int64_t mid = 1 + (l + h) / 2;
-        void *listItem = stList_get(list, mid);
+        int64_t m = (l + h) / 2;
+        void *listItem = stList_get(list, m);
         int i = cmpFn(item, listItem);
-        if (i >= 0) {
-            l = mid + 1;
+        if (i <= 0) {
+            h = m;
         } else {
-            h = mid;
+            l = m + 1;
         }
     }
+    if (l < last && cmpFn(stList_get(list, l), item) < 0) {
+        l++;
+    }
+    
     return l;
 }
+
+
 
 void stList_shuffle(stList *list) {
     for(int64_t i=0; i<stList_length(list); i++) {
