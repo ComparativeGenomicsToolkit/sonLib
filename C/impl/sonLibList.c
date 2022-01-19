@@ -246,6 +246,12 @@ void stList_sort(stList *list, int (*cmpFn)(const void *a, const void *b)) {
     safesort(list->list, stList_length(list), sizeof(void *), sortListCmpFn, &sargs);
 }
 
+void stList_sortInterval(stList *list, int64_t first, int64_t last, int (*cmpFn)(const void *a, const void *b)) {
+    assert(last >= first && last < stList_length(list));
+    struct sortFuncArgs sargs = {cmpFn};
+    safesort(list->list + first, last - first + 1, sizeof(void *), sortListCmpFn, &sargs);  
+}
+
 /* must warp function pointer in data, as ISO C doesn't allow conversions
  * between void* and function pointers */
 struct sort2FuncArgs {
@@ -293,6 +299,23 @@ int64_t stList_binarySearchFirstIndex(stList *list, void *item, int (*cmpFn)(con
         i--;
     }
     return i;
+}
+
+int64_t stList_lowerBound(stList *list, void *item, int (*cmpFn)(const void *a, const void *b)) {
+    // https://stackoverflow.com/questions/6443569/implementation-of-c-lower-bound
+    int64_t l = 0;
+    int64_t h = stList_length(list); 
+    while(l < h) {
+        int64_t mid = 1 + (l + h) / 2;
+        void *listItem = stList_get(list, mid);
+        int i = cmpFn(item, listItem);
+        if (i >= 0) {
+            l = mid + 1;
+        } else {
+            h = mid;
+        }
+    }
+    return l;
 }
 
 void stList_shuffle(stList *list) {

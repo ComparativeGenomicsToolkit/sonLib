@@ -159,6 +159,13 @@ stListIterator *stList_copyIterator(stListIterator *iterator);
  */
 void stList_sort(stList *list, int (*cmpFn)(const void *a, const void *b));
 
+ /*
+ * Like stList_sort, but operatres on given INCLUSIVE interval [first, last]
+ * NOTE: cmpFn takes pointers to elements, not pointer to pointers as with
+ * C sort.
+ */
+void stList_sortInterval(stList *list, int64_t first, int64_t last, int (*cmpFn)(const void *a, const void *b));
+
 /*
  * Sorts the stList with the given cmpFn, passing the extra argument to the comparison function.
  * NOTE: cmpFn takes pointers to elements, not pointer to pointers as with
@@ -184,6 +191,12 @@ void *stList_binarySearch(stList *list, void *item, int (*cmpFn)(const void *a, 
  */
 int64_t stList_binarySearchFirstIndex(stList *list, void *item, int (*cmpFn)(const void *a, const void *b));
 
+/*
+ * For a sorted list, performs binary search to find the index of the first occurrence of an item in the list that is not considered to go before item.  ie it is equivalent or goes after.  named after std::lower_bound in C++
+ * Item is the first argument passed to the cmpFn at each step. If item is not in the list returns -1
+ */  
+int64_t stList_lowerBound(stList *list, void *item, int (*cmpFn)(const void *a, const void *b));
+  
 /*
  * Permutes the list, by iterating over each element and swapping it randomly with a new location.
  */
