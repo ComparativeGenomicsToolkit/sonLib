@@ -108,6 +108,11 @@ bool stTree_equals(stTree *eTree1, stTree *eTree2);
 void stTree_sortChildren(stTree *root, int (*cmpFn)(stTree *a, stTree *b));
 
 /*
+ * Get the longest path length, in terms of total branch length, between any pair of nodes in the tree
+ */
+double stTree_getLongestPathLength(stTree *node);
+
+/*
  * Parses the newick tree string according to the format standard (I think).
  */
 stTree *stTree_parseNewickString(const char *string);

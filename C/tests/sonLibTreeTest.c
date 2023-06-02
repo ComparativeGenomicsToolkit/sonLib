@@ -250,6 +250,13 @@ static void test_stTree_getMRCA(CuTest *testCase) {
     teardown();
 }
 
+static void test_stTree_getLongestPathLength(CuTest *testCase) {
+    char *tree_string = "(((((Human:0.006969,Chimp:0.009727)Anc10:0.025291,Rhesus:0.044568)Anc07:0.07,Tree_shrew:0.19)Anc03:0.03,(Kangaroo_rat:0.17,(Mouse:0.072818,Rat:0.081244)Anc08:0.11)Anc04:0.150342)Anc01:0.02326,((Dog:0.07,Cat:0.07)Anc05:0.087381,((Pig:0.06,Cow:0.06)Anc09:0.104728,Horse:0.05)Anc06:0.05)Anc02:0.04)root;";
+    stTree *tree = stTree_parseNewickString(tree_string);
+    CuAssertDblEquals(testCase, stTree_getLongestPathLength(tree), 0.619574, 0.0001);
+    stTree_destruct(tree);
+}
+
 CuSuite* sonLib_ETreeTestSuite(void) {
     CuSuite* suite = CuSuiteNew();
     SUITE_ADD_TEST(suite, test_stTree_construct);
@@ -265,5 +272,6 @@ CuSuite* sonLib_ETreeTestSuite(void) {
     SUITE_ADD_TEST(suite, test_stTree_clone);
     SUITE_ADD_TEST(suite, test_stTree_reRoot);
     SUITE_ADD_TEST(suite, test_stTree_getMRCA);
+    SUITE_ADD_TEST(suite, test_stTree_getLongestPathLength);
     return suite;
 }

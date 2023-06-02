@@ -231,6 +231,28 @@ int stTree_getNumNodes(stTree *root) {
     return cnt;
 }
 
+static double stTree_getLongestPathLength2(stTree *node, double *max_length) {
+    double max_distance_to_node = 0.0; // Stores the maximum path distance to the node of a descendant lineage
+    for (int i = 0; i < stTree_getChildNumber(node); i++) {
+        double d = stTree_getLongestPathLength2(stTree_getChild(node, i), max_length); // Run recursively
+        if(d + max_distance_to_node > *max_length) {  // Is the distance between the max path lengths
+            // for these two child lineages longest the longest path length seen so far?
+            *max_length = d + max_distance_to_node;
+        }
+        if(d > max_distance_to_node) {
+            max_distance_to_node = d;
+        }
+    }
+    return max_distance_to_node + stTree_getBranchLength(node);
+}
+
+double stTree_getLongestPathLength(stTree *node) {
+    double longest_path = 0.0;
+    stTree_getLongestPathLength2(node, &longest_path);
+    return longest_path;
+}
+
+
 /////////////////////////////
 //Newick tree parser
 /////////////////////////////
