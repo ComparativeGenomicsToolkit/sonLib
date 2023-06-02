@@ -239,7 +239,7 @@ static double stTree_getLongestPathLength2(stTree *node, double *max_length) {
             // for these two child lineages longest the longest path length seen so far?
             *max_length = d + max_distance_to_node;
         }
-        if(d > max_distance_to_node) {
+        if(d > max_distance_to_node) { // If we have found a longer path to this node
             max_distance_to_node = d;
         }
     }
