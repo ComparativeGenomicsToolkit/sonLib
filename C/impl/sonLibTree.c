@@ -240,7 +240,7 @@ static double stTree_getLongestPathLength2(stTree *node, double *max_length) {
             *max_length = d + max_distance_to_node;
         }
         if(d > max_distance_to_node) { // If we have found a longer path to this node
-            max_distance_to_node = d;
+            max_distance_to_node = d;  // Store that path instead
         }
     }
     return max_distance_to_node + stTree_getBranchLength(node);
