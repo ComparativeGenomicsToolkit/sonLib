@@ -326,13 +326,13 @@ int stTreap_remove(long key, stTreap *tree) {
 			rmnode->parent->right = NULL;
 		}
 	}
-	free(rmnode);
 	//update parent counts
 	stTreap *p = rmnode->parent;
 	while(p) {
 		p->count -= 1;
 		p = p->parent;
 	}
+	free(rmnode);
 	//successfully deleted the node
 	return(1);
 }
