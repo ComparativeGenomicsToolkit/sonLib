@@ -24,11 +24,28 @@ extern "C" {
 extern const char *ST_FILE_EXCEPTION;
 
 /*
+ * Reads line into buffer *s with length *n, reallocating buffer size if needed
+ */
+int64_t stFile_getLineFromFileWithBuffer(char **s, int64_t *n, FILE *f);
+
+ /*
+  * As stFile_getLineFromFileWithBuffer, but using non-thread safe functions.
+  */
+ int64_t stFile_getLineFromFileWithBufferUnlocked(char **s, int64_t *n, FILE *f);
+
+
+/*
  * Reads a line from a file (which may be terminated by a newline char or EOF),
  * returning the line excluding the newline character.
  * If the file has hit the EOF then it returns NULL.
  */
 char *stFile_getLineFromFile(FILE *fileHandle);
+
+ /*
+  * As stFile_getLineFromFile, but using non-thread safe functions. Sometimes much faster
+  * than stFile_getLineFromFile.
+  */
+ char *stFile_getLineFromFileUnlocked(FILE *fileHandle);
 
 /*
  * Reads the line from the give file, returning lines in a list in order. Newlines/EOF characters are removed from the lines.

@@ -17,7 +17,38 @@
 
 const char *ST_FILE_EXCEPTION = "ST_FILE_EXCEPTION";
 
-static int64_t stFile_getLineFromFileP(char **s, int64_t *n, FILE *f) {
+int64_t stFile_getLineFromFileWithBufferUnlocked(char **s, int64_t *n, FILE *f) {
+    register int64_t nMinus1 = ((*n) - 1), i = 0;
+
+    char *s2 = *s;
+    while (1) {
+        register int64_t ch = (char) getc_unlocked(f);
+
+        if (ch == '\r') {
+            ch = getc_unlocked(f);
+        }
+
+        if (i == nMinus1) {
+            *n = 2 * (*n) + 1;
+            *s = realloc(*s, (*n + 1) * sizeof(char));
+            assert(*s != NULL);
+            s2 = *s + i;
+            nMinus1 = ((*n) - 1);
+        }
+
+        if ((ch == '\n') || (ch == EOF)) {
+            *s2 = '\0';
+            return (feof_unlocked(f) ? -1 : i);
+        } else {
+            *s2 = ch;
+            s2++;
+        }
+        ++i;
+    }
+    return 0;
+}
+
+int64_t stFile_getLineFromFileWithBuffer(char **s, int64_t *n, FILE *f) {
     register int64_t nMinus1 = ((*n) - 1), i = 0;
 
     char *s2 = *s;
@@ -48,10 +79,23 @@ static int64_t stFile_getLineFromFileP(char **s, int64_t *n, FILE *f) {
     return 0;
 }
 
+char *stFile_getLineFromFileUnlocked(FILE *fileHandle) {
+    int64_t length = 4096;
+    char *cA = st_malloc(length * sizeof(char));
+    int64_t i = stFile_getLineFromFileWithBufferUnlocked(&cA, &length, fileHandle);
+    if (i == -1 && strlen(cA) == 0) {
+        free(cA);
+        return NULL;
+    }
+    char *cA2 = stString_copy(cA);
+    free(cA);
+    return cA2;
+}
+
 char *stFile_getLineFromFile(FILE *fileHandle) {
     int64_t length = 100;
     char *cA = st_malloc(length * sizeof(char));
-    int64_t i = stFile_getLineFromFileP(&cA, &length, fileHandle);
+    int64_t i = stFile_getLineFromFileWithBuffer(&cA, &length, fileHandle);
     if (i == -1 && strlen(cA) == 0) {
         free(cA);
         return NULL;
