@@ -15,6 +15,14 @@
 #include <sys/stat.h>
 #include <inttypes.h>
 
+// getc_unlocked and feof_unlocked are POSIX.1-2001 extensions available on all
+// major Unix-like platforms (Linux, macOS, BSD variants, Solaris, etc.).
+// Fall back to the standard locked versions on non-Unix platforms (e.g., Windows).
+#if !defined(__unix__) && !defined(__unix) && !(defined(__APPLE__) && defined(__MACH__))
+#define getc_unlocked getc
+#define feof_unlocked feof
+#endif
+
 const char *ST_FILE_EXCEPTION = "ST_FILE_EXCEPTION";
 
 int64_t stFile_getLineFromFileWithBufferUnlocked(char **s, int64_t *n, FILE *f) {
