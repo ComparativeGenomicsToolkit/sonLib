@@ -10,6 +10,20 @@
  *  Created on: 7 Sep 2010
  *      Author: benedictpaten
  */
+
+// getc_unlocked is POSIX.1-2001; feof_unlocked is a GNU extension.
+// On Linux/glibc, both are suppressed when compiling with -std=c99 (which sets
+// __STRICT_ANSI__). _GNU_SOURCE restores them. Must be defined before any
+// system headers are included.
+// On macOS/BSD these are available without any feature test macro; _GNU_SOURCE
+// is safe there too (it expands rather than restricts the Darwin C level).
+// On non-Unix platforms we fall back to the locked versions via the #ifdef below.
+#if defined(__linux__) || (defined(__unix__) && !defined(__APPLE__))
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
+#endif
+
 #include "sonLibGlobalsInternal.h"
 #include <dirent.h>
 #include <sys/stat.h>
