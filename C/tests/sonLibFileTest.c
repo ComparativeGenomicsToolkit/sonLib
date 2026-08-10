@@ -22,6 +22,7 @@
 #if defined(__unix__) || defined(__unix) || (defined(__APPLE__) && defined(__MACH__))
 #define ST_TEST_HAVE_FORK 1
 #include <unistd.h>
+#include <errno.h>
 #include <sys/wait.h>
 #endif
 
@@ -207,6 +208,14 @@ static void test_st_fcheck_detectsFailedWrite(CuTest *testCase) {
         FILE *fileHandle = fopen("/dev/full", "w");
         if (fileHandle == NULL) {
             _exit(66); // no /dev/full, reported as a skip below
+        }
+        // Prove the path really is the always-full device before asserting
+        // anything about it.  A rootfs unpacked without device nodes, or a
+        // sandbox that stubs /dev, can leave a plain writable file here, and
+        // then the write below would succeed and the test would report a
+        // failure that says nothing about st_fcheck.
+        if (write(fileno(fileHandle), "x", 1) != -1 || errno != ENOSPC) {
+            _exit(66);
         }
         fprintf(fileHandle, "this cannot possibly be written\n");
         st_fcheck(fileHandle, "/dev/full");
