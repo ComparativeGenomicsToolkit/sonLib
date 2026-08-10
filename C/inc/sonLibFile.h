@@ -106,6 +106,29 @@ void stFile_rmtree(const char *fileName);
  */
 FILE *st_fopen(const char *fileName, const char *mode);
 
+/*
+ * Die if an output file has failed to write.  stdio reports a failed write --
+ * a full disk, a quota, a read-only mount -- by setting the stream's error
+ * indicator, and nothing is obliged to look at it, so without a check a
+ * truncated output file is indistinguishable from a complete one and the
+ * program still exits successfully.  A short fasta is still a valid fasta.
+ *
+ * The flush is part of the check rather than an optimisation: the buffer is
+ * not necessarily handed to the operating system until it happens, so a
+ * stream that has already lost data can still look clean beforehand.
+ *
+ * Use on stdout, or mid-stream, wherever the file is not being closed here.
+ */
+void st_fcheck(FILE *fileHandle, const char *fileName);
+
+/*
+ * st_fcheck followed by a close whose return value is also checked.  Closing
+ * is the last point at which buffered data reaches the operating system, so a
+ * write that fails there is reported nowhere else.  Prefer this to a bare
+ * fclose on any file the program has written.
+ */
+void st_fclose(FILE *fileHandle, const char *fileName);
+
 #ifdef __cplusplus
 }
 #endif
