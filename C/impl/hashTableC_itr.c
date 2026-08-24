@@ -16,29 +16,18 @@ indexFor(uint64_t tablelength, uint64_t hashvalue) {
 /*****************************************************************************/
 /* hashtable_iterator    - iterator constructor */
 
+/* Walks the insertion-order list, not the buckets, so that the order does not
+ * depend on the numeric value of the keys.  See hashTablePrivateC.h. */
 struct hashtable_itr *
 hashtable_iterator(struct hashtable *h)
 {
-    unsigned int i, tablelength;
     struct hashtable_itr *itr = (struct hashtable_itr *)
         st_malloc(sizeof(struct hashtable_itr));
     if (NULL == itr) return NULL;
     itr->h = h;
-    itr->e = NULL;
+    itr->e = h->insertFirst;
     itr->parent = NULL;
-    tablelength = h->tablelength;
-    itr->index = tablelength;
-    if (0 == h->entrycount) return itr;
-
-    for (i = 0; i < tablelength; i++)
-    {
-        if (NULL != h->table[i])
-        {
-            itr->e = h->table[i];
-            itr->index = i;
-            break;
-        }
-    }
+    itr->index = 0;
     return itr;
 }
 
@@ -49,38 +38,9 @@ hashtable_iterator(struct hashtable *h)
 int
 hashtable_iterator_advance(struct hashtable_itr *itr)
 {
-    unsigned int j,tablelength;
-    struct entry **table;
-    struct entry *next;
     if (NULL == itr->e) return 0; /* stupidity check */
-
-    next = itr->e->next;
-    if (NULL != next)
-    {
-        itr->parent = itr->e;
-        itr->e = next;
-        return -1;
-    }
-    tablelength = itr->h->tablelength;
-    itr->parent = NULL;
-    if (tablelength <= (j = ++(itr->index)))
-    {
-        itr->e = NULL;
-        return 0;
-    }
-    table = itr->h->table;
-    while (NULL == (next = table[j]))
-    {
-        if (++j >= tablelength)
-        {
-            itr->index = tablelength;
-            itr->e = NULL;
-            return 0;
-        }
-    }
-    itr->index = j;
-    itr->e = next;
-    return -1;
+    itr->e = itr->e->insertNext;
+    return (NULL == itr->e) ? 0 : -1;
 }
 
 /*****************************************************************************/
@@ -94,27 +54,25 @@ hashtable_iterator_advance(struct hashtable_itr *itr)
 int
 hashtable_iterator_remove(struct hashtable_itr *itr)
 {
-    struct entry *remember_e, *remember_parent;
+    struct entry *remember_e, **pE;
     int ret;
 
-    /* Do the removal */
-    if (NULL == (itr->parent))
-    {
-        /* element is head of a chain */
-        itr->h->table[itr->index] = itr->e->next;
-    } else {
-        /* element is mid-chain */
-        itr->parent->next = itr->e->next;
-    }
-    /* itr->e is now outside the hashtable */
     remember_e = itr->e;
+
+    /* Unlink from the bucket chain.  The iterator walks the insertion list, so
+     * the chain predecessor has to be looked up rather than remembered. */
+    pE = &(itr->h->table[indexFor(itr->h->tablelength, remember_e->h)]);
+    while (*pE != remember_e) {
+        pE = &((*pE)->next);
+    }
+    *pE = remember_e->next;
+
+    /* Advance before unlinking, so the successor is still reachable */
+    ret = hashtable_iterator_advance(itr);
+
+    hashtable_insertListRemove(itr->h, remember_e);
     itr->h->entrycount--;
     freekey(remember_e->k);
-
-    /* Advance the iterator, correcting the parent */
-    remember_parent = itr->parent;
-    ret = hashtable_iterator_advance(itr);
-    if (itr->parent == remember_e) { itr->parent = remember_parent; }
     free(remember_e);
     return ret;
 }
