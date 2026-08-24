@@ -8,8 +8,36 @@
 
 const char *RANDOM_EXCEPTION_ID = "RANDOM_EXCEPTION";
 
+/*
+ * The generator state is per-thread rather than per-process.  rand() draws from
+ * one shared sequence, so threads racing for it get a different interleaving on
+ * every run, and anything built from those draws differs run to run.  With the
+ * state thread-local, a parallel loop gets reproducible draws by seeding each
+ * iteration itself, from the work item rather than from the thread -- see the
+ * st_randomSeed calls in cactus's parallel loops.
+ *
+ * Every thread starts from the same default seed, so a single-threaded program
+ * that never calls st_randomSeed sees the same sequence it always did (a fixed
+ * one: rand() was never seeded from the clock either).
+ */
+#if defined(__GNUC__) || defined(__clang__)
+#define ST_THREAD_LOCAL __thread
+#else
+#define ST_THREAD_LOCAL
+#endif
+
+static ST_THREAD_LOCAL uint64_t st_randomState = 1;
+
+/* splitmix64 - small, fast, and passes the usual statistical batteries */
+static uint64_t st_randomNext(void) {
+    uint64_t z = (st_randomState += UINT64_C(0x9E3779B97F4A7C15));
+    z = (z ^ (z >> 30)) * UINT64_C(0xBF58476D1CE4E5B9);
+    z = (z ^ (z >> 27)) * UINT64_C(0x94D049BB133111EB);
+    return z ^ (z >> 31);
+}
+
 void st_randomSeed(int64_t seed) {
-    srand(seed);
+    st_randomState = (uint64_t) seed;
 }
 
 int64_t st_randomInt64(int64_t min, int64_t max) {
@@ -37,8 +65,9 @@ int64_t st_randomInt(int64_t min, int64_t max) {
 }
 
 double st_random(void) {
-    static const double i = RAND_MAX+1.0;
-    double d = rand()/i;
+    // 31 bits, the resolution this returned when it was rand()/(RAND_MAX+1.0).
+    // Callers have been written against values of that granularity, so keep it.
+    double d = (double) (st_randomNext() >> 33) / 2147483648.0; // 2^31
     return d >= 1.0 ? 0.9999 : (d < 0.0 ? 0.0 : d);
 }
 

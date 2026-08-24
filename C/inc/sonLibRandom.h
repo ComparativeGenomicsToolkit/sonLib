@@ -27,6 +27,11 @@ extern const char *RANDOM_EXCEPTION_ID;
 
 /*
  * Seed the random number generator.
+ *
+ * The generator state is thread-local, so this seeds the calling thread only.
+ * Code that draws random numbers from a parallel loop and wants a reproducible
+ * result should seed at the top of each iteration with a value derived from the
+ * work item (not from the thread id, which is not stable across runs).
  */
 void st_randomSeed(int64_t seed);
 
