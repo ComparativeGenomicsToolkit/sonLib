@@ -220,3 +220,25 @@ FILE *st_fopen(const char *fileName, const char *mode) {
     }
     return ret;
 }
+
+void st_fcheck(FILE *fileHandle, const char *fileName) {
+    // the flush is what pushes the buffer at the operating system, so it has
+    // to happen before the error indicator is worth reading
+    if (fflush(fileHandle) != 0) {
+        st_errnoAbort("Failed to write the file %s, so its contents are incomplete", fileName);
+    }
+    // the indicator is sticky, so this catches a failure at any earlier point
+    // in the write, including one whose errno has since been overwritten
+    if (ferror(fileHandle)) {
+        st_errAbort("Failed to write the file %s, so its contents are incomplete. "
+                    "Check the free space, the quota and the permissions on the "
+                    "file system holding it", fileName);
+    }
+}
+
+void st_fclose(FILE *fileHandle, const char *fileName) {
+    st_fcheck(fileHandle, fileName);
+    if (fclose(fileHandle) != 0) {
+        st_errnoAbort("Failed to close the file %s, so its contents may be incomplete", fileName);
+    }
+}
