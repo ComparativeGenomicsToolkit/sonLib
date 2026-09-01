@@ -3,6 +3,7 @@
 #ifndef __HASHTABLE_PRIVATE_CWC22_H__
 #define __HASHTABLE_PRIVATE_CWC22_H__
 
+#include <stddef.h>
 #include "hashTableC.h"
 
 #ifdef __cplusplus
@@ -11,11 +12,22 @@ extern "C" {
 
 /*****************************************************************************/
 
+/*
+ * Entries are on two lists: "next" chains the entries that share a bucket,
+ * while insertNext/insertPrev chain every entry in the table in the order it
+ * was inserted.  Iteration walks the insertion list rather than the buckets,
+ * so that the order a hash yields its entries does not depend on the numeric
+ * value of the keys.  That matters because most hashes here are keyed on
+ * pointers: walking the buckets hands entries back in an order that shifts
+ * with the heap layout, which makes the output of anything downstream of the
+ * iteration differ from run to run.
+ */
 struct entry
 {
     void *k, *v;
     uint64_t h;
     struct entry *next;
+    struct entry *insertNext, *insertPrev;
 };
 
 struct hashtable {
@@ -28,7 +40,34 @@ struct hashtable {
     int (*eqfn) (const void *k1, const void *k2);
     void (*keyFree)(void *);
     void (*valueFree)(void *);
+    struct entry *insertFirst, *insertLast; /* insertion-order list, for iteration */
 };
+
+/*****************************************************************************/
+/* Insertion-order list maintenance, used by hashTableC.c and hashTableC_itr.c */
+static inline void hashtable_insertListAppend(struct hashtable *h, struct entry *e) {
+    e->insertNext = NULL;
+    e->insertPrev = h->insertLast;
+    if (h->insertLast != NULL) {
+        h->insertLast->insertNext = e;
+    } else {
+        h->insertFirst = e;
+    }
+    h->insertLast = e;
+}
+
+static inline void hashtable_insertListRemove(struct hashtable *h, struct entry *e) {
+    if (e->insertPrev != NULL) {
+        e->insertPrev->insertNext = e->insertNext;
+    } else {
+        h->insertFirst = e->insertNext;
+    }
+    if (e->insertNext != NULL) {
+        e->insertNext->insertPrev = e->insertPrev;
+    } else {
+        h->insertLast = e->insertPrev;
+    }
+}
 
 /*****************************************************************************/
 uint64_t

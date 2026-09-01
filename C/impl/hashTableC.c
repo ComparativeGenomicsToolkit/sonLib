@@ -62,6 +62,8 @@ create_hashtable(uint64_t minsize, uint64_t(*hashf)(const void*), int(*eqf)(
     //my additions
     h->keyFree = keyFree;
     h->valueFree = valueFree;
+    h->insertFirst = NULL;
+    h->insertLast = NULL;
     return h;
 }
 
@@ -164,6 +166,7 @@ int64_t hashtable_insert(struct hashtable *h, void *k, void *v) {
     e->v = v;
     e->next = h->table[index];
     h->table[index] = e;
+    hashtable_insertListAppend(h, e);
     return -1;
 }
 
@@ -203,6 +206,7 @@ hashtable_remove(struct hashtable *h, void *k, int64_t freeKey) {
         /* Check hash value to short circuit heavier comparison */
         if ((hashvalue == e->h) && (h->eqfn(k, e->k))) {
             *pE = e->next;
+            hashtable_insertListRemove(h, e);
             h->entrycount--;
             v = e->v;
             if (freeKey) {
