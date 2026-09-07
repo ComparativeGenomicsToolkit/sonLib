@@ -15,6 +15,16 @@ LIBDIR ?= ${rootPath}/../sonLib/lib
 CFLAGS += -fPIC -std=c99
 CXXFLAGS += -fPIC
 
+# With -fPIC, GCC will not inline a global function into another function of the same file,
+# because a shared library could have the symbol interposed at load time; that keeps every
+# small accessor an out-of-line call inside the libraries built with this file (the pinch
+# graph's segment accessors were 7% of a cactus caf run that way). Nothing here relies on
+# interposition, so tell the compiler not to expect it. Clang behaves this way by default;
+# the probe leaves the flag out for a compiler that does not know it.
+noSemanticInterposition = $(shell echo 'int f(void){return 0;}' | ${CC} -fno-semantic-interposition -x c -c -o /dev/null - >/dev/null 2>&1 && echo -fno-semantic-interposition)
+CFLAGS += ${noSemanticInterposition}
+CXXFLAGS += ${noSemanticInterposition}
+
 ##
 # CGL `standard' inc/impl
 CPPFLAGS += -Iinc -Iimpl
