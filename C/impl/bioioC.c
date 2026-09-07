@@ -153,59 +153,86 @@ char *addSeqToList(char *seq, int64_t *length, int64_t *maxLength, char *fastaNa
 }
 
 void fastaReadToFunction(FILE *fastaFile, void *destination, void (*addSeq)(void *destination, const char *name, const char *seq, int64_t length)) {
-    //reads in group of sequences into lists
-    char j;
-    int64_t k;
+    /*
+     * Reads the sequences one after another, handing each to addSeq. Anything before the first '>' is
+     * skipped, the header runs to the end of its line, and in the sequence newlines, spaces and tabs are
+     * dropped while any other character must be a letter or '-'. A sequence is delivered at the next '>'
+     * or at the end of the file, including one that is empty or whose header was cut short by the end
+     * of the file.
+     *
+     * The file is read a block at a time and each run of sequence characters within a block is
+     * appended in one go: character-at-a-time getc and append calls made this the largest single cost
+     * of setting up a big alignment.
+     */
     char *seq = NULL;
-    int64_t seqLength = 0;
+    int64_t k = 0; //length of the sequence being read
+    int64_t seqLength = 0; //capacity of seq
     char cA[STRING_ARRAY_SIZE];
-    int64_t l;
+    int64_t l = 0; //length of the header being read
+    unsigned char buffer[1 << 16];
+    size_t n = 0, i = 0;
+    enum { beforeFirstHeader, inHeader, inSequence } state = beforeFirstHeader;
 
-    k=0;
-    while((j = getc(fastaFile)) != EOF) { //initial terminating characters
-        if(j == '>') { //fasta start
-            fastaStart:
-            cA[0] = '\0';
-            l = 0;
-            while(TRUE) {
-                j = getc(fastaFile);
-                if(j == EOF) {
-                    seq = addSeqToList(seq, &k, &seqLength, cA, destination, addSeq); //lax qualification for a sequence
-                    goto cleanup;
+    while (1) {
+        if (i == n) {
+            n = fread(buffer, 1, sizeof(buffer), fastaFile);
+            i = 0;
+            if (n == 0) {
+                break;
+            }
+        }
+        unsigned char c = buffer[i];
+        if (state == beforeFirstHeader) {
+            if (c == '>') {
+                state = inHeader;
+                cA[0] = '\0';
+                l = 0;
+            }
+            i++;
+        } else if (state == inHeader) {
+            if (c == '\n') {
+                state = inSequence;
+            } else {
+                if (l + 1 >= STRING_ARRAY_SIZE) {
+                    st_errAbort("Fasta header is longer than the %" PRIi64 " characters supported: %s\n", (int64_t) STRING_ARRAY_SIZE - 1, cA);
                 }
-                if(j == '\n')  {
-                    break;
-                }
-                //add to name string
-                cA[l++] = j;
+                cA[l++] = c;
                 cA[l] = '\0';
             }
-            while(TRUE) { //start of sequence
-                j = getc(fastaFile);
-                if(j == EOF) {
-                    seq = addSeqToList(seq, &k, &seqLength, cA, destination, addSeq);
-                    goto cleanup;
-                }
-                if(j != '\n' && j != ' ' && j != '\t') {
-                    if(j == '>') {
-                        //end of seq
-                        seq = addSeqToList(seq, &k, &seqLength, cA, destination, addSeq);
-                        goto fastaStart;
+            i++;
+        } else {
+            if (c == '>') {
+                //end of seq
+                seq = addSeqToList(seq, &k, &seqLength, cA, destination, addSeq);
+                state = inHeader;
+                cA[0] = '\0';
+                l = 0;
+                i++;
+            } else if (c == '\n' || c == ' ' || c == '\t') {
+                i++;
+            } else {
+                //a run of sequence characters, up to the end of the block or the next separator
+                size_t j = i;
+                while (j < n && buffer[j] != '\n' && buffer[j] != ' ' && buffer[j] != '\t' && buffer[j] != '>') {
+                    if (!isalpha(buffer[j]) && buffer[j] != '-') {
+                        //For safety and sanity I only allows roman alphabet characters and gaps in fasta sequences.
+                        st_errAbort("!!Got an unexpected character in input fasta sequence: '%c' \n", buffer[j]);
                     }
-                    else { //valid char
-                        if(!isalpha(j) && j != '-') {
-                             //For safety and sanity I only allows roman alphabet characters and gaps in fasta sequences.
-                             st_errAbort("!!Got an unexpected character in input fasta sequence: '%c' \n", j);
-                        }
-                        seq = arrayPrepareAppend(seq, &seqLength, k+1, sizeof(char));
-                        seq[k++] = j;
-                    }
+                    j++;
                 }
+                seq = arrayPrepareAppend(seq, &seqLength, k + (int64_t) (j - i), sizeof(char));
+                memcpy(seq + k, buffer + i, j - i);
+                k += j - i;
+                i = j;
             }
         }
     }
-    cleanup:
-    if (seq != NULL) free(seq);
+    if (state != beforeFirstHeader) { //lax qualification for a sequence: a header at the end of the file counts
+        seq = addSeqToList(seq, &k, &seqLength, cA, destination, addSeq);
+    }
+    if (seq != NULL) {
+        free(seq);
+    }
 }
 
 // for programmer clarity when using fastaRead(_functoin)
