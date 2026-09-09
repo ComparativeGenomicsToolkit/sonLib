@@ -40,6 +40,12 @@ stList *stList_construct2(int64_t size);
 stList *stList_construct3(int64_t size, void(*destructElement)(void *));
 
 /*
+ * Constructs an empty list whose backing array already has room for the given number of
+ * elements, so that many appends can be made before it has to grow.
+ */
+stList *stList_constructWithCapacity(int64_t capacity, void(*destructElement)(void *));
+
+/*
  * Destructs the stList and, if a destructElement function was given to the constructor,
  * calls the destruct element function for each non-null element in the stList.
  * The list maybe NULL.

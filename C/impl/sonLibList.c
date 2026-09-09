@@ -42,6 +42,16 @@ stList *stList_construct3(int64_t length, void (*destructElement)(void *)) {
     return list;
 }
 
+stList *stList_constructWithCapacity(int64_t capacity, void (*destructElement)(void *)) {
+    assert(capacity >= 0);
+    stList *list = st_malloc(sizeof(stList));
+    list->length = 0;
+    list->maxLength = capacity;
+    list->list = st_malloc(capacity * sizeof(void *));
+    list->destructElement = destructElement;
+    return list;
+}
+
 /* free elements in list */
 static void destructElements(stList *list) {
     for(int64_t i=0; i<stList_length(list); i++) { //only free up to known area of list
