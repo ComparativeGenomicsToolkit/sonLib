@@ -27,6 +27,7 @@ struct stKVDatabaseConf {
     unsigned port;
     int timeout;
     int64_t maxKTRecordSize;
+    int64_t maxRedisRecordSize;
     int64_t maxKTBulkSetSize;
     int64_t maxRedisBulkSetSize;
     int64_t maxKTBulkSetNumRecords;
@@ -60,12 +61,14 @@ stKVDatabaseConf *stKVDatabaseConf_constructKyotoTycoon(const char *host, unsign
     return conf;
 }
 
-stKVDatabaseConf *stKVDatabaseConf_constructRedis(const char *host, unsigned port, int64_t maxRedisBulkSetSize) {
+stKVDatabaseConf *stKVDatabaseConf_constructRedis(const char *host, unsigned port, 
+		                                  int64_t maxRecordSize, int64_t maxBulkSetSize) {
     stKVDatabaseConf *conf = stSafeCCalloc(sizeof(stKVDatabaseConf));
     conf->type = stKVDatabaseTypeRedis;
     conf->host = stString_copy(host);
     conf->port = port;
-    conf->maxRedisBulkSetSize = maxRedisBulkSetSize;
+    conf->maxRedisRecordSize = maxRecordSize;
+    conf->maxRedisBulkSetSize = maxBulkSetSize;
     return conf;
 }
 
@@ -220,6 +223,18 @@ static int64_t getXMLMaxKTBulkSetNumRecords(stHash *hash) {
     }
 }
 
+/* Default to 510M. Redis keys and values cannot be greater than 512M 
+ * refer to https://redis.io/topics/data-types-intro
+ */
+static int64_t getXMLMaxRedisRecordSize(stHash *hash) {
+    const char *value = stHash_search(hash, "max_record_size");
+    if (value == NULL) {
+        return (int64_t) 510000000;
+    } else {
+        return stSafeStrToInt64(value);
+    }
+}
+
 /* Default to 1.75GB which seems to be about where the
  * redis network error danger zone starts
  */
@@ -257,7 +272,7 @@ static stKVDatabaseConf *constructFromString(const char *xmlString) {
                                                        getXmlValueRequired(hash, "database_name"), getXmlValueRequired(hash, "table_name"));
     } else if (stString_eq(type, "redis")) {
         databaseConf = stKVDatabaseConf_constructRedis(getXmlValueRequired(hash, "host"), getXmlPort(hash),
-						       getXMLMaxRedisBulkSetSize(hash));
+						       getXMLMaxRedisRecordSize(hash), getXMLMaxRedisBulkSetSize(hash));
     } else {
         stThrowNew(ST_KV_DATABASE_EXCEPTION_ID, "invalid database type \"%s\"", type);
     }
@@ -285,6 +300,7 @@ stKVDatabaseConf *stKVDatabaseConf_constructClone(stKVDatabaseConf *srcConf) {
     conf->timeout = srcConf->timeout;
     conf->maxKTRecordSize = srcConf->maxKTRecordSize;
     conf->maxKTBulkSetSize = srcConf->maxKTBulkSetSize;
+    conf->maxRedisRecordSize = srcConf->maxRedisRecordSize;
     conf->maxRedisBulkSetSize = srcConf->maxRedisBulkSetSize;
     conf->maxKTBulkSetNumRecords = srcConf->maxKTBulkSetNumRecords;
     conf->user = stString_copy(srcConf->user);
@@ -341,6 +357,15 @@ int64_t stKVDatabaseConf_getMaxKTBulkSetSize(stKVDatabaseConf *conf) {
 
 int64_t stKVDatabaseConf_getMaxKTBulkSetNumRecords(stKVDatabaseConf *conf) {
     return conf->maxKTBulkSetNumRecords;
+}
+
+int64_t stKVDatabaseConf_getMaxRedisRecordSize(stKVDatabaseConf *conf) {
+    return conf->maxRedisRecordSize;
+}
+
+void stKVDatabaseConf_setMaxRedisRecordSize(stKVDatabaseConf *conf,
+                                            int64_t maxRecordSize) {
+    conf->maxRedisRecordSize = maxRecordSize;
 }
 
 int64_t stKVDatabaseConf_getMaxRedisBulkSetSize(stKVDatabaseConf *conf) {
