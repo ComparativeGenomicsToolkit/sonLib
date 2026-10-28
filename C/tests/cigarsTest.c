@@ -10,7 +10,6 @@
 #include <string.h>
 
 #include "fastCMaths.h"
-#include "avl.h"
 #include "commonC.h"
 #include "bioioC.h"
 #include "pairwiseAlignment.h"

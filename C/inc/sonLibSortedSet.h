@@ -54,12 +54,14 @@ stSortedSet *stSortedSet_copyConstruct(stSortedSet *sortedSet, void (*destructEl
 void stSortedSet_setDestructor(stSortedSet *set, void (*destructElement)(void *));
 
 /*
- * Destructs the sorted set. Note: NOT THREAD-SAFE.
+ * Destructs the sorted set, calling the destruct element function, if there is one, on the
+ * elements in order. Note: NOT THREAD-SAFE.
  */
 void stSortedSet_destruct(stSortedSet *sortedSet);
 
 /*
- * Inserts the object into the sorted set.
+ * Inserts the object into the sorted set. If the set already holds an object equal to it under
+ * the comparison function, the new object takes its place (and the old one is not destructed).
  */
 void stSortedSet_insert(stSortedSet *sortedSet, void *object);
 
@@ -110,7 +112,12 @@ void *stSortedSet_getFirst(stSortedSet *items);
 void *stSortedSet_getLast(stSortedSet *items);
 
 /*
- * Constructs an iterator for the sorted set.
+ * Constructs an iterator for the sorted set. The first call to next returns the first member of
+ * the set, or the first call to previous the last. Off either end the iterator returns NULL, and
+ * the step after that comes back in at the first (next) or last (previous) member.
+ *
+ * The set may be changed while an iterator is in use, except that the item the iterator returned
+ * last must not be removed: each step goes to the neighbour of that item in the set as it is then.
  */
 stSortedSetIterator *stSortedSet_getIterator(stSortedSet *items);
 

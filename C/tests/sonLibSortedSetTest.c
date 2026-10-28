@@ -497,6 +497,132 @@ static void test_stSortedSet_searchGreaterThan(CuTest* testCase) {
     sonLibSortedSetTestTeardown();
 }
 
+/*
+ * The item with the given key in the model, an array of items indexed by key, or the one with the
+ * nearest key above (d = 1) or below (d = -1) it, or NULL.
+ */
+static stIntTuple *modelStep(stIntTuple **model, int64_t keys, int64_t key, int64_t d) {
+    for (key += d; key >= 0 && key < keys; key += d) {
+        if (model[key] != NULL) {
+            return model[key];
+        }
+    }
+    return NULL;
+}
+
+static int64_t keyOf(stIntTuple *item) {
+    return item == NULL ? -1 : stIntTuple_get(item, 0);
+}
+
+/*
+ * Random inserts, removes, searches and iterator steps, checked against an array indexed by key.
+ * Iterators are kept across the changes, which they must survive as long as the item they are on
+ * stays in the set.
+ */
+static void test_stSortedSet_randomOperations(CuTest* testCase) {
+    int64_t keys = 150, iteratorNumber = 4;
+    stIntTuple *items[2 * keys]; //Two equal items per key, to see which one the set holds.
+    for (int64_t i = 0; i < 2 * keys; i++) {
+        items[i] = stIntTuple_construct1(i / 2);
+    }
+    stIntTuple *model[keys];
+    stSortedSetIterator *iterators[iteratorNumber];
+    int64_t positions[iteratorNumber]; //The key each iterator is on, -1 if it is off either end.
+    for (int64_t test = 0; test < 20; test++) {
+        stSortedSet *sortedSet = stSortedSet_construct3((int (*)(const void *, const void *))stIntTuple_cmpFn, NULL);
+        for (int64_t i = 0; i < keys; i++) {
+            model[i] = NULL;
+        }
+        for (int64_t i = 0; i < iteratorNumber; i++) {
+            iterators[i] = stSortedSet_getIterator(sortedSet);
+            positions[i] = -1;
+        }
+        int64_t size = 0;
+        for (int64_t op = 0; op < 5000; op++) {
+            int64_t key = st_randomInt(0, keys);
+            stIntTuple *query = items[2 * key];
+            int64_t i = st_randomInt(0, iteratorNumber);
+            switch (st_randomInt(0, 10)) {
+                case 0:
+                case 1: { //Insert, replacing an equal item.
+                    stIntTuple *item = items[2 * key + st_randomInt(0, 2)];
+                    size += model[key] == NULL;
+                    model[key] = item;
+                    stSortedSet_insert(sortedSet, item);
+                    CuAssertTrue(testCase, stSortedSet_search(sortedSet, query) == item);
+                    break;
+                }
+                case 2: { //Remove, but not the item an iterator is on.
+                    int64_t j;
+                    for (j = 0; j < iteratorNumber && positions[j] != key; j++);
+                    if (j == iteratorNumber) {
+                        CuAssertTrue(testCase, stSortedSet_remove(sortedSet, query) == model[key]);
+                        size -= model[key] != NULL;
+                        model[key] = NULL;
+                    }
+                    break;
+                }
+                case 3: //Searches
+                    CuAssertTrue(testCase, stSortedSet_search(sortedSet, query) == model[key]);
+                    CuAssertTrue(testCase, stSortedSet_searchLessThan(sortedSet, query) == modelStep(model, keys, key, -1));
+                    CuAssertTrue(testCase, stSortedSet_searchGreaterThan(sortedSet, query) == modelStep(model, keys, key, 1));
+                    CuAssertTrue(testCase, stSortedSet_searchLessThanOrEqual(sortedSet, query) ==
+                            (model[key] != NULL ? model[key] : modelStep(model, keys, key, -1)));
+                    CuAssertTrue(testCase, stSortedSet_searchGreaterThanOrEqual(sortedSet, query) ==
+                            (model[key] != NULL ? model[key] : modelStep(model, keys, key, 1)));
+                    CuAssertTrue(testCase, stSortedSet_getFirst(sortedSet) == modelStep(model, keys, -1, 1));
+                    CuAssertTrue(testCase, stSortedSet_getLast(sortedSet) == modelStep(model, keys, keys, -1));
+                    CuAssertIntEquals(testCase, size, stSortedSet_size(sortedSet));
+                    break;
+                case 4: //A new iterator, from the start, an item or the end.
+                    stSortedSet_destructIterator(iterators[i]);
+                    if (model[key] != NULL && st_random() < 0.5) {
+                        iterators[i] = stSortedSet_getIteratorFrom(sortedSet, query);
+                        positions[i] = keyOf(modelStep(model, keys, key, -1));
+                    } else if (size > 0 && st_random() < 0.5) {
+                        iterators[i] = stSortedSet_getReverseIterator(sortedSet);
+                        positions[i] = -1;
+                    } else {
+                        iterators[i] = stSortedSet_getIterator(sortedSet);
+                        positions[i] = -1;
+                    }
+                    break;
+                case 5: { //A copy of another iterator.
+                    int64_t j = st_randomInt(0, iteratorNumber);
+                    if (j != i) {
+                        stSortedSet_destructIterator(iterators[i]);
+                        iterators[i] = stSortedSet_copyIterator(iterators[j]);
+                        positions[i] = positions[j];
+                    }
+                    break;
+                }
+                default: { //Steps; off either end an iterator comes back in at the first or last item.
+                    int64_t d = st_random() < 0.5 ? 1 : -1;
+                    stIntTuple *expected = modelStep(model, keys, positions[i] == -1 ? (d == 1 ? -1 : keys) : positions[i], d);
+                    stIntTuple *item = d == 1 ? stSortedSet_getNext(iterators[i]) : stSortedSet_getPrevious(iterators[i]);
+                    CuAssertTrue(testCase, item == expected);
+                    positions[i] = keyOf(item);
+                }
+            }
+        }
+        stList *list = stSortedSet_getList(sortedSet);
+        CuAssertIntEquals(testCase, size, stList_length(list));
+        for (int64_t j = 0, k = 0; k < keys; k++) {
+            if (model[k] != NULL) {
+                CuAssertTrue(testCase, stList_get(list, j++) == model[k]);
+            }
+        }
+        stList_destruct(list);
+        for (int64_t j = 0; j < iteratorNumber; j++) {
+            stSortedSet_destructIterator(iterators[j]);
+        }
+        stSortedSet_destruct(sortedSet);
+    }
+    for (int64_t i = 0; i < 2 * keys; i++) {
+        stIntTuple_destruct(items[i]);
+    }
+}
+
 CuSuite* sonLib_stSortedSetTestSuite(void) {
     CuSuite* suite = CuSuiteNew();
     SUITE_ADD_TEST(suite, test_stSortedSet_construct);
@@ -513,5 +639,6 @@ CuSuite* sonLib_stSortedSetTestSuite(void) {
     SUITE_ADD_TEST(suite, test_stSortedSet_searchLessThan);
     SUITE_ADD_TEST(suite, test_stSortedSet_searchGreaterThanOrEqual);
     SUITE_ADD_TEST(suite, test_stSortedSet_searchGreaterThan);
+    SUITE_ADD_TEST(suite, test_stSortedSet_randomOperations);
     return suite;
 }
