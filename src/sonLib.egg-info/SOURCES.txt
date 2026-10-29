@@ -12,7 +12,6 @@ setup.py
 sonLib_daemonize.py
 unitTest.py
 C/Makefile
-C/impl/avl.c
 C/impl/bioioC.c
 C/impl/commonC.c
 C/impl/fastCMaths.c
@@ -60,7 +59,6 @@ C/impl/stPosetAlignment.c
 C/impl/stSafeC.c
 C/impl/stThreadPool.c
 C/impl/stUnionFind.c
-C/inc/avl.h
 C/inc/bioioC.h
 C/inc/commonC.h
 C/inc/fastCMaths.h
